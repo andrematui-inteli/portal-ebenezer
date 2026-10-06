@@ -1,0 +1,10 @@
+{
+  "name": "Instituto Ebenézer",
+  "short_name": "Ebenézer",
+  "lang": "pt-BR",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#F8F6F2",
+  "theme_color": "#0D3F20",
+  "icons": [{ "src": "/arvore.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }]
+}

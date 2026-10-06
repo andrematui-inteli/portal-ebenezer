@@ -1,0 +1,8 @@
+# Configuração de publicação na Netlify: já aponta para a pasta do front-end.
+[build]
+  base = "web"
+  command = "npm run build"
+  publish = "dist"
+
+[build.environment]
+  NODE_VERSION = "20"
