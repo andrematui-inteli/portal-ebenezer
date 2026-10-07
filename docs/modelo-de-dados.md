@@ -48,6 +48,22 @@ erDiagram
 | Ninguém muda o próprio papel | Gatilho em `perfil` recusa troca de papel ou de status por quem não é gestão. |
 | Dado desatualizado é estado normal | Visão `painel_atualizacao`: reforço desatualizado após 7 dias sem presença, programas de sábado após 14. |
 
+## Vida escolar (migração 6)
+
+| Tabela ou visão | Para quê | Regra principal |
+| --- | --- | --- |
+| `evento` | Agenda | `participantes` preenchido: só eles (e a gestão) veem. Senão, `publico` (papéis) e `turma_id` filtram. Gatilho `trava_evento`: passeio, visita a empresa, workshop e encontro com patrocinadores só pela gestão; responsável e apoiador só pedem conversa (`status = 'solicitado'`). |
+| `equipe_contato` | Escolher com quem pedir conversa | Só nome e papel da equipe. |
+| `tarefa` | Tarefas, dicas e resumos por turma | Leitura para todo perfil logado; publicação pela equipe da turma. |
+| `material` | Links de estudo | Leitura aberta; edição pela equipe. |
+| `livro`, `reserva_livro`, `livro_disponivel`, `reservar_livro()` | Biblioteca | Reserva atômica, no máximo 2 abertas por pessoa. |
+| `carencia` (+ `unidade`, `condicao`, `vaquinha`) | Tabela de necessidades | Vaquinha conta em reais. |
+| `compromisso_doacao`, `confirmar_compromisso()` | Intenção de doar | Vira `doacao` e soma no progresso só quando a gestão confirma. |
+| `ranking_apoiadores` | Ranking de pessoas e de empresas | Só perfis adultos logados; nome só com autorização. |
+| `nota`, `observacao_aluno` | Notas e comentários | Regra `ve_crianca`: aluno, responsável, educador da turma e gestão. |
+| `desempenho_turma` | Gráficos por turma | Agregado por mês; grupos com menos de 5 crianças ficam sem número. |
+| `sugestao.tipo` | Sugestão, reclamação ou elogio | Mesma regra de leitura das sugestões. |
+
 ## Perfis
 
 Os sete perfis da matriz de permissões são o enum `papel` (`responsavel`, `estudante`, `educacao`, `doador_pf`, `empresa`, `gestao`) mais o visitante, que é o acesso anônimo sem perfil.

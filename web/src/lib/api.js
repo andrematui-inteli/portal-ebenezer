@@ -142,4 +142,71 @@ export const api = {
   async lotesRecentes() {
     return ok(await supabase.from('lote_importacao').select('*').order('importado_em', { ascending: false }).limit(6))
   },
+
+  // ───────── Vida escolar (migração 6) ─────────
+  // A agenda já chega filtrada pelo banco: cada perfil só recebe o que pode ver.
+  async agenda(desde, ate) {
+    return ok(await supabase.from('evento').select('*, turma(nome)').gte('inicio', desde).lte('inicio', ate)
+      .neq('status', 'cancelado').order('inicio'))
+  },
+  async salvarEvento(e) { ok(await supabase.from('evento').insert(e)) },
+  async atualizarEvento(id, campos) { ok(await supabase.from('evento').update(campos).eq('id', id)) },
+  async removerEvento(id) { ok(await supabase.from('evento').delete().eq('id', id)) },
+  async equipeContato() { return ok(await supabase.from('equipe_contato').select('*').order('nome')) },
+  async todasTurmas() {
+    return ok(await supabase.from('turma').select('id, nome, programa(nome, sensivel)').eq('ativo', true).order('nome'))
+      .filter((t) => !t.programa.sensivel)
+  },
+
+  async tarefas() {
+    return ok(await supabase.from('tarefa').select('*, turma(nome), autor:perfil(nome)').order('criado_em', { ascending: false }).limit(60))
+  },
+  async salvarTarefa(t) { ok(await supabase.from('tarefa').insert(t)) },
+  async removerTarefa(id) { ok(await supabase.from('tarefa').delete().eq('id', id)) },
+
+  async materiais() { return ok(await supabase.from('material').select('*').order('ordem')) },
+  async salvarMaterial(m) { ok(await supabase.from('material').insert(m)) },
+
+  async livros() { return ok(await supabase.from('livro_disponivel').select('*').order('titulo')) },
+  async minhasReservas() {
+    return ok(await supabase.from('reserva_livro').select('*, livro(titulo, autor)').in('status', ['reservado', 'retirado']).order('reservado_em', { ascending: false }))
+  },
+  async reservarLivro(livroId) { return ok(await supabase.rpc('reservar_livro', { p_livro: livroId })) },
+  async cancelarReserva(id) { ok(await supabase.from('reserva_livro').update({ status: 'cancelado' }).eq('id', id)) },
+  async atualizarReserva(id, status) { ok(await supabase.from('reserva_livro').update({ status }).eq('id', id)) },
+
+  async necessidades() { return this.carenciasPublicas() },
+  async presencaIndividual(criancaId) {
+    const linhas = ok(await supabase.from('presenca_mensal').select('mes, presentes, possiveis').eq('crianca_id', criancaId).order('mes'))
+    const porMes = {}
+    for (const l of linhas) { porMes[l.mes] ||= { p: 0, t: 0 }; porMes[l.mes].p += l.presentes; porMes[l.mes].t += l.possiveis }
+    return Object.entries(porMes).map(([mes, v]) => ({ mes, presenca_pct: Math.round((100 * v.p) / v.t) }))
+  },
+  async comprometerDoacao(c) { ok(await supabase.from('compromisso_doacao').insert(c)) },
+  async compromissos() {
+    return ok(await supabase.from('compromisso_doacao').select('*, carencia(titulo, unidade, vaquinha), perfil:perfil!compromisso_doacao_perfil_id_fkey(nome)').order('criado_em', { ascending: false }).limit(40))
+  },
+  async confirmarCompromisso(id) { ok(await supabase.rpc('confirmar_compromisso', { p_id: id })) },
+  async salvarCarencia(c) { ok(await supabase.from('carencia').insert(c)) },
+
+  async ranking() { return ok(await supabase.from('ranking_apoiadores').select('*').order('posicao')) },
+
+  async notas(criancaId) { return ok(await supabase.from('nota').select('*').eq('crianca_id', criancaId).order('data')) },
+  async observacoes(criancaId) {
+    return ok(await supabase.from('observacao_aluno').select('*, autor:perfil(nome)').eq('crianca_id', criancaId).order('criado_em', { ascending: false }))
+  },
+  async lancarNota(n) { ok(await supabase.from('nota').insert(n)) },
+  async salvarObservacao(o) { ok(await supabase.from('observacao_aluno').insert(o)) },
+  async desempenhoTurmas() { return ok(await supabase.from('desempenho_turma').select('*').order('mes')) },
+  // Crianças que o perfil pode acompanhar individualmente (o banco filtra).
+  async criancasVisiveis() {
+    return ok(await supabase.from('matricula').select('turma_id, crianca(id, nome_exibicao)').is('fim', null))
+      .filter((m) => m.crianca)
+  },
+
+  async enviarFeedback(texto, tipo, autorId) { ok(await supabase.from('sugestao').insert({ texto, tipo, autor_id: autorId })) },
+  async feedbacks() { return ok(await supabase.from('sugestao').select('*, autor:perfil!sugestao_autor_id_fkey(nome, papel)').order('criada_em', { ascending: false }).limit(50)) },
+  async responderFeedback(id, resposta, perfilId) {
+    ok(await supabase.from('sugestao').update({ resposta, respondida_por: perfilId, respondida_em: new Date().toISOString() }).eq('id', id))
+  },
 }

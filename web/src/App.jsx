@@ -17,7 +17,24 @@ import TurmaEstudante from './pages/estudante/Turma'
 import Pendencias from './pages/equipe/Pendencias'
 import Importar from './pages/equipe/Importar'
 import Turmas from './pages/equipe/Turmas'
-import EmBreve from './pages/apoio/EmBreve'
+import Escola from './pages/escola/Escola'
+import Agenda from './pages/escola/Agenda'
+import Tarefas from './pages/escola/Tarefas'
+import Estudos from './pages/escola/Estudos'
+import Biblioteca from './pages/escola/Biblioteca'
+import Necessidades from './pages/escola/Necessidades'
+import Ranking from './pages/escola/Ranking'
+import Desempenho from './pages/escola/Desempenho'
+import Feedback from './pages/escola/Feedback'
+
+// Vida escolar: quem entra em cada seção (o banco aplica o mesmo filtro por linha).
+const TODOS = ['estudante', 'responsavel', 'educacao', 'gestao', 'doador_pf', 'empresa']
+const ADULTOS = TODOS.filter((p) => p !== 'estudante')
+const ESCOLA = [
+  ['/escola', Escola, TODOS], ['/escola/agenda', Agenda, TODOS], ['/escola/tarefas', Tarefas, TODOS],
+  ['/escola/estudos', Estudos, TODOS], ['/escola/biblioteca', Biblioteca, TODOS], ['/escola/desempenho', Desempenho, TODOS],
+  ['/escola/necessidades', Necessidades, ADULTOS], ['/escola/ranking', Ranking, ADULTOS], ['/escola/feedback', Feedback, ADULTOS],
+]
 
 // A navegação também respeita o perfil, mas quem garante o isolamento é o banco.
 function Exige({ papeis, children }) {
@@ -38,6 +55,7 @@ function Rotas() {
         <Route path="/estudante" element={<Trilha />} />
         <Route path="/estudante/conquistas" element={<ConquistasEstudante />} />
         <Route path="/estudante/turma" element={<TurmaEstudante />} />
+        {ESCOLA.filter(([, , papeis]) => papeis.includes('estudante')).map(([p, Tela]) => <Route key={p} path={p} element={<Tela />} />)}
         <Route path="*" element={<Navigate to="/estudante" replace />} />
       </Routes>
     )
@@ -60,7 +78,8 @@ function Rotas() {
       <Route path="/equipe/importar" element={<Exige papeis={['educacao', 'gestao']}><Importar /></Exige>} />
       <Route path="/equipe/turmas" element={<Exige papeis={['educacao', 'gestao']}><Turmas /></Exige>} />
 
-      <Route path="/apoio" element={<Exige papeis={['doador_pf', 'empresa']}><EmBreve /></Exige>} />
+      {ESCOLA.map(([p, Tela, papeis]) => <Route key={p} path={p} element={<Exige papeis={papeis}><Tela /></Exige>} />)}
+      <Route path="/apoio" element={<Navigate to="/escola" replace />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   )

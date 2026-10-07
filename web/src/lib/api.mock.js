@@ -1,3 +1,4 @@
+import { apiEscola } from './api.mock.escola'
 // Dados de exemplo para revisar as telas sem Supabase (npm run dev:mock).
 // Mesmo formato das respostas reais de api.js. Nunca entra no build de produção.
 
@@ -222,4 +223,5 @@ export const api = {
       { id: 'l3', tipo: 'avaliacao', arquivo_nome: 'alicerce-evolucao-2026-09.csv', importado_em: diasAtras(31).toISOString(), criadas: 40, alteradas: 0, ignoradas: 0, desfeito_em: null },
     ])
   },
+  ...apiEscola(personaAtual, espera),
 }
