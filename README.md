@@ -33,13 +33,19 @@ Tudo fica em **Escola** (`/escola`), na barra de navegação de cada perfil. A r
 | Ranking | — | vê | vê (e aparece nele) | vê | vê |
 | Desempenho | o próprio e a turma | os filhos e as turmas | só turmas (agregado) | lança notas e comentários das suas turmas | tudo |
 | Sugestões | — | envia | envia | responde | responde |
+| Cadastro | — | — | — | — | cadastra pessoas e crianças, liga responsáveis, libera acesso de aluno, aprova pedidos |
 
-Conversa individual só aparece para os participantes e a diretoria. O ranking só aparece para quem está logado e mostra o nome apenas de quem autorizou; os demais aparecem como "Apoiador anônimo". Doar pelo portal registra uma **intenção**: só conta na barra e no ranking quando a diretoria confirma que chegou.
+- **Conversas:** a conversa individual aparece só para os participantes e a diretoria. O responsável pede; o professor e a diretoria também marcam direto com a família de um aluno.
+- **Ranking:** mostra os valores doados (decisão da diretoria em 8/10/2026), só para quem está logado. O nome aparece apenas para quem autorizou; os demais aparecem como "Apoiador anônimo".
+- **Doações:** doar pelo portal registra uma **intenção** e, na vaquinha, mostra o PIX copia e cola com o valor. Só conta na barra e no ranking quando a diretoria confirma que o dinheiro chegou. O portal não processa pagamento.
+- **PIX:** a chave é cadastrada e editada pela diretoria em **Escola → Necessidades**.
+- **Suspensão:** só professor (alunos das suas turmas) e diretoria suspendem o acesso de um aluno. O responsável define o PIN de saída e pode pausar a exibição dos dados do filho (LGPD).
+- **Agenda:** aula, prova e entrega só de segunda a sexta (regra no banco). O fim de semana é para visitas e atividades extracurriculares.
 
 ## Como aplicar o banco no Supabase
 
 1. Crie um projeto no Supabase na região São Paulo (`sa-east-1`).
-2. No SQL Editor, rode os arquivos de `supabase/migrations/` em ordem numérica (são seis).
+2. No SQL Editor, rode os arquivos de `supabase/migrations/` em ordem numérica (são oito).
 
 3. Rode `supabase/seed/dados_sinteticos.sql` para popular o banco. Ele pode ser rodado de novo a qualquer momento: apaga os dados sintéticos anteriores e gera tudo outra vez, com datas relativas ao dia. **Rode de novo antes de cada demonstração**, para os painéis aparecerem atualizados.
 
@@ -74,7 +80,10 @@ createdb portal
 psql -d portal -f supabase/tests/00_stub_supabase_local.sql
 for f in supabase/migrations/*.sql; do psql -d portal -v ON_ERROR_STOP=1 -f "$f"; done
 psql -d portal -f supabase/tests/permissoes_test.sql
+psql -d portal -f supabase/tests/escola_test.sql
 ```
+
+`escola_test.sql` cobre a vida escolar e o cadastro (migrações 6 a 8) e roda na mesma sessão, depois do primeiro.
 
 ## Como rodar o front-end
 

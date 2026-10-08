@@ -1,11 +1,12 @@
 import { useState } from 'react'
-import { HandHeart, Plus, PiggyBank, Package } from 'lucide-react'
+import { Copy, HandHeart, Pencil, Plus, PiggyBank, Package, QrCode } from 'lucide-react'
 import { api } from '@api'
 import { useSessao } from '../../lib/sessao'
 import { useCarregar } from '../../lib/useCarregar'
 import { Carregando, Erro, Caixa, Progresso } from '../../components/comuns'
 import { dataCurta, reais, numero } from '../../lib/formato'
 import { Pagina, Filtros, Modal, ehEquipe } from './comum'
+import { pixCopiaECola, normalizarChave } from '../../lib/pix'
 
 const qtd = (n, v) => (n.vaquinha ? reais(v) : `${numero(v)} ${n.unidade || ''}`.trim())
 
@@ -17,9 +18,10 @@ export default function Necessidades() {
   const [nova, setNova] = useState(false)
   const [ok, setOk] = useState(null)
   const { dados, erro, carregando, recarregar } = useCarregar(async () => {
-    const [itens, compromissos] = await Promise.all([api.necessidades(), api.compromissos()])
-    return { itens, compromissos }
+    const [itens, compromissos, pix] = await Promise.all([api.necessidades(), api.compromissos(), api.pix()])
+    return { itens, compromissos, pix }
   })
+  const [editandoPix, setEditandoPix] = useState(false)
   const itens = (dados?.itens || []).filter((n) => filtro === 'todas' ? true : filtro === 'vaquinhas' ? n.vaquinha && n.status !== 'atendida'
     : filtro === 'itens' ? !n.vaquinha && n.status !== 'atendida' : n.status !== 'atendida')
   const podeDoar = ['responsavel', 'doador_pf', 'empresa', 'gestao'].includes(perfil?.papel)
@@ -30,6 +32,9 @@ export default function Necessidades() {
       intro="O que está faltando para as crianças. Doe itens ou contribua com uma vaquinha; a barra mostra quanto já chegou."
       acao={ehEquipe(perfil) && <button className="botao" onClick={() => setNova(true)}><Plus size={18} aria-hidden="true" />Nova necessidade</button>}>
       {ok && <Caixa titulo={ok} />}
+      {dados && (dados.pix || perfil?.papel === 'gestao') && (
+        <CaixaPix pix={dados.pix} editar={perfil?.papel === 'gestao' ? () => setEditandoPix(true) : null} />
+      )}
       {perfil?.papel === 'gestao' && pendentes.length > 0 && (
         <Caixa tipo="alerta" titulo={`${pendentes.length} doação(ões) prometida(s) esperando chegar`}>
           <ul className="lista-simples">
@@ -83,27 +88,93 @@ export default function Necessidades() {
           </ul>
         </section>
       )}
-      {doando && <FormDoar n={doando} fechar={() => setDoando(null)} feito={(t) => { setDoando(null); setOk(t); recarregar() }} />}
+      {editandoPix && <FormPix pix={dados.pix} perfil={perfil} fechar={() => setEditandoPix(false)} salvo={() => { setEditandoPix(false); recarregar() }} />}
+      {doando && <FormDoar n={doando} pix={dados.pix} fechar={() => setDoando(null)} feito={(t) => { setDoando(null); setOk(t); recarregar() }} />}
       {nova && <FormNecessidade perfil={perfil} fechar={() => setNova(false)} salvo={() => { setNova(false); recarregar() }} />}
     </Pagina>
   )
 }
 
-function FormDoar({ n, fechar, feito }) {
+// Chave PIX do Instituto, com botão de copiar. A diretoria edita por aqui.
+function CaixaPix({ pix, editar }) {
+  const [copiado, setCopiado] = useState(false)
+  if (!pix) return <Caixa tipo="alerta" titulo="O PIX do Instituto ainda não foi cadastrado." acao={<button className="botao botao--claro" onClick={editar}>Cadastrar PIX</button>}>Sem ele, quem quer doar dinheiro não tem para onde mandar.</Caixa>
+  return (
+    <div className="cartao pix">
+      <QrCode size={28} aria-hidden="true" />
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <strong>PIX do Instituto</strong>
+        <p className="pix__chave">{pix.chave}</p>
+        <p className="fonte">{pix.titular} · chave {TIPO_CHAVE[pix.tipo_chave]}{pix.instrucoes && `. ${pix.instrucoes}`}</p>
+      </div>
+      <button className="botao botao--claro" onClick={async () => { await copiar(normalizarChave(pix.chave, pix.tipo_chave)); setCopiado(true) }}>
+        <Copy size={16} aria-hidden="true" />{copiado ? 'Copiado!' : 'Copiar'}
+      </button>
+      {editar && <button className="botao botao--texto" onClick={editar}><Pencil size={16} aria-hidden="true" />Editar</button>}
+    </div>
+  )
+}
+const TIPO_CHAVE = { cnpj: 'CNPJ', email: 'e-mail', telefone: 'celular', aleatoria: 'aleatória' }
+const copiar = async (t) => { try { await navigator.clipboard.writeText(t) } catch { window.prompt('Copie o texto:', t) } }
+
+function FormPix({ pix, perfil, fechar, salvo }) {
+  const [f, setF] = useState({ chave: pix?.chave || '', tipo_chave: pix?.tipo_chave || 'cnpj', titular: pix?.titular || 'Instituto Ebenezer', cidade: pix?.cidade || 'SAO PAULO', instrucoes: pix?.instrucoes || '' })
+  const [erro, setErro] = useState(null)
+  const valido = { cnpj: /^\d{14}$/, telefone: /^\d{10,13}$/, email: /^[^@\s]+@[^@\s]+\.[^@\s]+$/, aleatoria: /^[0-9a-f-]{32,36}$/i }[f.tipo_chave]
+    .test(f.tipo_chave === 'cnpj' || f.tipo_chave === 'telefone' ? f.chave.replace(/\D/g, '') : f.chave.trim())
+  const enviar = async (e) => {
+    e.preventDefault()
+    try { await api.salvarPix({ ...f, chave: f.chave.trim(), instrucoes: f.instrucoes.trim() || null }, perfil.id); salvo() } catch (x) { setErro(x.message) }
+  }
+  return (
+    <Modal titulo="PIX do Instituto" fechar={fechar}>
+      <form className="pilha" onSubmit={enviar}>
+        <p className="suave">Aparece para responsáveis, doadores e empresas na hora de doar. Confira com o banco antes de salvar: um erro aqui manda o dinheiro para outra conta.</p>
+        <Filtros rotulo="Tipo de chave" valor={f.tipo_chave} mudar={(v) => setF({ ...f, tipo_chave: v })} opcoes={Object.entries(TIPO_CHAVE).map(([k, r]) => [k, r === 'CNPJ' ? r : r[0].toUpperCase() + r.slice(1)])} />
+        <div className="campo"><label htmlFor="px-c">Chave</label><input id="px-c" required value={f.chave} onChange={(e) => setF({ ...f, chave: e.target.value })} />
+          {f.chave && !valido && <small style={{ color: 'var(--erro)' }}>Esta chave não parece um {TIPO_CHAVE[f.tipo_chave]} válido.</small>}</div>
+        <div className="campos-linha">
+          <div className="campo"><label htmlFor="px-t">Nome do titular</label><input id="px-t" required maxLength={60} value={f.titular} onChange={(e) => setF({ ...f, titular: e.target.value })} /></div>
+          <div className="campo"><label htmlFor="px-ci">Cidade</label><input id="px-ci" required value={f.cidade} onChange={(e) => setF({ ...f, cidade: e.target.value })} /></div>
+        </div>
+        <div className="campo"><label htmlFor="px-i">Recado para quem doa (opcional)</label><input id="px-i" maxLength={200} value={f.instrucoes} onChange={(e) => setF({ ...f, instrucoes: e.target.value })} placeholder="Ex.: mande o comprovante no WhatsApp da secretaria" /></div>
+        {erro && <Caixa tipo="erro" titulo={erro} />}
+        <button className="botao botao--largo" disabled={!valido}>Salvar PIX</button>
+      </form>
+    </Modal>
+  )
+}
+
+function FormDoar({ n, pix, fechar, feito }) {
   const { perfil } = useSessao()
   const [v, setV] = useState('')
   const [mensagem, setMensagem] = useState('')
   const [erro, setErro] = useState(null)
+  const [codigo, setCodigo] = useState(null)   // PIX copia e cola, depois de registrar a intenção
+  const [copiado, setCopiado] = useState(false)
   const falta = n.quantidade_necessaria - n.quantidade_atendida
+  const fimDinheiro = 'Obrigado! Quando o PIX cair, a diretoria confirma e o valor entra na barra e no ranking.'
   const enviar = async (e) => {
     e.preventDefault()
     try {
       await api.comprometerDoacao({ carencia_id: n.id, perfil_id: perfil.id, mensagem: mensagem.trim() || null, ...(n.vaquinha ? { valor: Number(v) } : { quantidade: Number(v) }) })
+      if (n.vaquinha && pix) { setCodigo(pixCopiaECola(pix, Number(v))); return }
       feito(n.vaquinha
         ? 'Obrigado! A equipe vai te mandar a chave PIX do Instituto. Quando o valor cair, ele entra na barra e no ranking.'
         : 'Obrigado! Leve a doação ao Instituto de segunda a sexta, das 8h às 17h. Quando chegar, ela entra na barra e no ranking.')
     } catch (x) { setErro(x.message) }
   }
+  if (codigo) return (
+    <Modal titulo="Pague com PIX" fechar={() => feito(fimDinheiro)}>
+      <div className="pilha">
+        <p>Copie o código abaixo, abra o app do seu banco e escolha <strong>PIX → Copia e cola</strong>. O valor de <strong>{reais(v)}</strong> já vem preenchido.</p>
+        <textarea className="pix__codigo" readOnly value={codigo} rows={4} onFocus={(e) => e.target.select()} aria-label="Código PIX copia e cola" />
+        <button className="botao botao--largo" onClick={async () => { await copiar(codigo); setCopiado(true) }}><Copy size={18} aria-hidden="true" />{copiado ? 'Código copiado!' : 'Copiar código PIX'}</button>
+        <p className="fonte">Ou use a chave {TIPO_CHAVE[pix.tipo_chave]}: <strong>{pix.chave}</strong> ({pix.titular}).{pix.instrucoes && ` ${pix.instrucoes}`}</p>
+        <button className="botao botao--claro botao--largo" onClick={() => feito(fimDinheiro)}>Já paguei</button>
+      </div>
+    </Modal>
+  )
   return (
     <Modal titulo={n.titulo} fechar={fechar}>
       <form className="pilha" onSubmit={enviar}>

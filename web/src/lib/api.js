@@ -204,6 +204,33 @@ export const api = {
       .filter((m) => m.crianca)
   },
 
+  // ───────── Cadastro, PIX e conversa marcada pela equipe (migração 8) ─────────
+  async responsaveisVisiveis() { return ok(await supabase.from('responsaveis_visiveis').select('*').order('nome')) },
+  async pix() { return ok(await supabase.from('config_pix').select('*').maybeSingle()) },
+  async salvarPix(dados, perfilId) {
+    ok(await supabase.from('config_pix').upsert({ id: true, ...dados, atualizado_por: perfilId, atualizado_em: new Date().toISOString() }))
+  },
+  async pessoas() { return ok(await supabase.from('perfil').select('id, nome, papel, telefone, ativo, criado_em').neq('papel', 'estudante').order('nome')) },
+  async criancasCadastro() {
+    return ok(await supabase.from('crianca')
+      .select('id, nome_exibicao, ano_nascimento, codigo_parceiro, matricula(fim, turma(nome)), responsavel_crianca(parentesco, consentimento_em, perfil(nome)), acesso_estudante(suspenso_em)')
+      .eq('ativo', true).order('nome_exibicao'))
+  },
+  async solicitacoes() { return ok(await supabase.from('solicitacao_acesso').select('*').eq('status', 'pendente').order('criada_em')) },
+  async tratarSolicitacao(id, status, perfilId) {
+    ok(await supabase.from('solicitacao_acesso').update({ status, tratada_por: perfilId, tratada_em: new Date().toISOString() }).eq('id', id))
+  },
+  async cadastrarPessoa(p) {
+    return ok(await supabase.rpc('cadastrar_pessoa', { p_email: p.email, p_senha: p.senha, p_nome: p.nome, p_papel: p.papel, p_telefone: p.telefone || null, p_turmas: p.turmas || [] }))
+  },
+  async cadastrarCrianca(c) {
+    return ok(await supabase.rpc('cadastrar_crianca', { p_nome: c.nome, p_ano: Number(c.ano), p_turma: c.turma || null, p_codigo: c.codigo || null, p_responsavel: c.responsavel || null, p_parentesco: c.parentesco || null }))
+  },
+  async vincularResponsavel(responsavel, crianca, parentesco) {
+    ok(await supabase.rpc('vincular_responsavel', { p_responsavel: responsavel, p_crianca: crianca, p_parentesco: parentesco || null }))
+  },
+  async liberarAcessoEstudante(crianca, email, senha) { ok(await supabase.rpc('liberar_acesso_estudante', { p_crianca: crianca, p_email: email, p_senha: senha })) },
+
   async enviarFeedback(texto, tipo, autorId) { ok(await supabase.from('sugestao').insert({ texto, tipo, autor_id: autorId })) },
   async feedbacks() { return ok(await supabase.from('sugestao').select('*, autor:perfil!sugestao_autor_id_fkey(nome, papel)').order('criada_em', { ascending: false }).limit(50)) },
   async responderFeedback(id, resposta, perfilId) {

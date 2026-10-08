@@ -17,7 +17,7 @@ export function Espaco({ tela, children }) {
   return (
     <>
       <Moldura itens={NAV_ESTUDANTE} classe="app--crianca" dados={{ 'data-tela': tela }}
-        acaoTopo={<button className="botao botao--texto" onClick={() => setPedindoPin(true)} aria-label="Sair, precisa do PIN do responsável"><Lock size={20} aria-hidden="true" /></button>}>
+        acaoTopo={<button className="botao botao--texto" onClick={() => setPedindoPin(true)} aria-label="Sair, precisa do PIN do responsável"><Lock size={18} aria-hidden="true" />Sair</button>}>
         <div className="pilha-g">{children}</div>
       </Moldura>
       {pedindoPin && <PinSaida fechar={() => setPedindoPin(false)} />}
