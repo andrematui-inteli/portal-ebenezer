@@ -318,3 +318,7 @@ revoke all on function public.reservar_livro, public.confirmar_compromisso from 
 grant execute on function public.reservar_livro, public.confirmar_compromisso to authenticated;
 -- O Supabase dá acesso padrão ao anônimo em objetos novos do schema public; aqui não.
 revoke all on equipe_contato, livro_disponivel, ranking_apoiadores, desempenho_turma from anon;
+-- Permissões de tabela explícitas (a RLS acima decide as linhas), como na migração 2.
+grant select, insert, update, delete on evento, tarefa, material, livro, reserva_livro,
+  compromisso_doacao, nota, observacao_aluno to authenticated;
+grant select on material, livro to anon;
