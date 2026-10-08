@@ -210,6 +210,10 @@ do $$ begin
   raise notice 'ok  visitante não vê agenda nem notas';
 exception when insufficient_privilege then raise notice 'ok  visitante não vê agenda nem notas';
 end $$;
+-- Mesmo com permissão de tabela (como no Supabase), a RLS esconde todo evento do anônimo.
+reset role; grant select on evento to anon; set role anon;
+select pg_temp.checa((select count(*) from evento) = 0, 'visitante não vê nenhum evento, nem passeio aberto');
+reset role; revoke select on evento from anon; set role anon;
 do $$ begin
   perform 1 from ranking_apoiadores;
   raise exception 'deveria ter falhado';
