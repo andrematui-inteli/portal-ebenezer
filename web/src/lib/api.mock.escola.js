@@ -3,6 +3,8 @@
 
 const ts = (dias, h, m = 0) => { const d = new Date(); d.setDate(d.getDate() + dias); d.setHours(h, m, 0, 0); return d.toISOString() }
 const dia = (dias) => ts(dias, 12).slice(0, 10)
+// n-ésimo dia útil a partir de amanhã, em dias corridos (aula e prova nunca caem no fim de semana).
+const util = (n) => { let dias = 0; for (let k = 0; k < n;) { dias++; const d = new Date(); d.setDate(d.getDate() + dias); if (d.getDay() % 6) k++ } return dias }
 const sabado = (n) => { const d = new Date(); d.setDate(d.getDate() + ((6 - d.getDay() + 7) % 7 || 7) + 7 * n); return Math.round((d - new Date()) / 86400000) }
 let seq = 100
 const novoId = (p) => `${p}-${++seq}`
@@ -24,17 +26,17 @@ const EQUIPE = [{ id: 'p-beatriz', nome: 'Beatriz (coordenação)', papel: 'educ
 const FAMILIA = ['estudante', 'responsavel', 'educacao', 'gestao']
 
 const EVENTOS = [
-  { tipo: 'prova', titulo: 'Prova de matemática', descricao: 'Frações e problemas com as quatro operações.', inicio: ts(3, 9), fim: ts(3, 10, 30), local: 'Sala 2', turma_id: 't-ref-m', publico: FAMILIA, criado_por: 'p-beatriz' },
-  { tipo: 'entrega', titulo: 'Entrega do caderno de leitura', descricao: 'Trazer o caderno com os três resumos do mês.', inicio: ts(5, 8), local: 'Sala 2', turma_id: 't-ref-m', publico: FAMILIA, criado_por: 'p-beatriz' },
-  { tipo: 'aula', titulo: 'Aula de reforço de inglês', descricao: 'Revisão de cores, números e cumprimentos.', inicio: ts(1, 14), fim: ts(1, 15, 30), local: 'Sala 1', turma_id: 't-ref-t', publico: FAMILIA, criado_por: 'p-beatriz' },
-  { tipo: 'esportiva', titulo: 'Futebol no campinho', descricao: 'Atividade esportiva do Laboratório de Sonhos. Ir de tênis.', inicio: ts(4, 13), fim: ts(4, 15), local: 'Campo do Jardim Ângela', turma_id: 't-son-a', publico: FAMILIA, criado_por: 'p-beatriz' },
+  { tipo: 'prova', titulo: 'Prova de matemática', descricao: 'Frações e problemas com as quatro operações.', inicio: ts(util(3), 9), fim: ts(util(3), 10, 30), local: 'Sala 2', turma_id: 't-ref-m', publico: FAMILIA, criado_por: 'p-beatriz' },
+  { tipo: 'entrega', titulo: 'Entrega do caderno de leitura', descricao: 'Trazer o caderno com os três resumos do mês.', inicio: ts(util(5), 8), local: 'Sala 2', turma_id: 't-ref-m', publico: FAMILIA, criado_por: 'p-beatriz' },
+  { tipo: 'aula', titulo: 'Aula de reforço de inglês', descricao: 'Revisão de cores, números e cumprimentos.', inicio: ts(util(1), 14), fim: ts(util(1), 15, 30), local: 'Sala 1', turma_id: 't-ref-t', publico: FAMILIA, criado_por: 'p-beatriz' },
+  { tipo: 'esportiva', titulo: 'Futebol no campinho', descricao: 'Atividade esportiva do Laboratório de Sonhos. Ir de tênis.', inicio: ts(util(4), 13), fim: ts(util(4), 15), local: 'Campo do Jardim Ângela', turma_id: 't-son-a', publico: FAMILIA, criado_por: 'p-beatriz' },
   { tipo: 'reuniao_pais', titulo: 'Reunião de pais e professores', descricao: 'Conversa sobre o avanço da turma no semestre.', inicio: ts(6, 18), fim: ts(6, 19, 30), local: 'Salão do Instituto', publico: ['responsavel', 'educacao', 'gestao'], criado_por: 'p-beatriz' },
   { tipo: 'reuniao_individual', titulo: 'Conversa sobre o Kauã', descricao: 'Combinar rotina de leitura em casa.', inicio: ts(8, 17), fim: ts(8, 17, 30), local: 'Sala da coordenação', participantes: ['p-adriana', 'p-beatriz'], criado_por: 'p-beatriz' },
   { tipo: 'visita_empresa', titulo: 'Visita à TechNorte Sistemas', descricao: 'Visita do mês: as crianças conhecem uma empresa de tecnologia e conversam com profissionais.', inicio: ts(12, 9), fim: ts(12, 12), local: 'TechNorte, Santo Amaro', criado_por: 'p-gestao' },
   { tipo: 'workshop_responsaveis', titulo: 'Sábado das famílias: como escrever seu currículo', descricao: 'Oficina prática. Traga documento com foto; saímos com o currículo impresso.', inicio: ts(sabado(0), 9), fim: ts(sabado(0), 12), local: 'Salão do Instituto', publico: ['responsavel', 'educacao', 'gestao'], criado_por: 'p-gestao' },
   { tipo: 'workshop_responsaveis', titulo: 'Sábado das famílias: finanças da casa', descricao: 'Montar o orçamento do mês, separar a sobra e fugir de juros altos.', inicio: ts(sabado(2), 9), fim: ts(sabado(2), 12), local: 'Salão do Instituto', publico: ['responsavel', 'educacao', 'gestao'], criado_por: 'p-gestao' },
   { tipo: 'workshop_responsaveis', titulo: 'Sábado das famílias: IA no dia a dia', descricao: 'Usar assistentes de IA no celular para escrever mensagens, tirar dúvidas e procurar emprego.', inicio: ts(sabado(4), 9), fim: ts(sabado(4), 12), local: 'Sala de informática', publico: ['responsavel', 'educacao', 'gestao'], criado_por: 'p-gestao' },
-  { tipo: 'passeio', titulo: 'Passeio ao Zoológico de São Paulo', descricao: 'Saída com as turmas do Laboratório de Sonhos. Depende da vaquinha do transporte.', inicio: ts(30, 8), fim: ts(30, 16), local: 'Zoológico de São Paulo', criado_por: 'p-gestao' },
+  { tipo: 'passeio', titulo: 'Passeio ao Zoológico de São Paulo', descricao: 'Saída com as turmas do Laboratório de Sonhos. Depende da vaquinha do transporte.', inicio: ts(sabado(3), 8), fim: ts(sabado(3), 16), local: 'Zoológico de São Paulo', criado_por: 'p-gestao' },
   { tipo: 'encontro_patrocinadores', titulo: 'Encontro com patrocinadores', descricao: 'Prestação de contas do semestre e plano de 2027.', inicio: ts(20, 19), fim: ts(20, 21), local: 'Salão do Instituto', publico: ['doador_pf', 'empresa', 'gestao'], criado_por: 'p-gestao' },
 ].map((e, i) => ({ id: 'e' + i, status: 'confirmado', publico: null, participantes: null, turma_id: null, crianca_id: null, fim: null, ...e }))
 

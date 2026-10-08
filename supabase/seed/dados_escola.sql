@@ -2,6 +2,19 @@
 -- Rode DEPOIS de dados_sinteticos.sql. Pode ser rodado de novo: apaga e recria.
 -- Os links de materiais são reais e gratuitos; todo o resto é fictício.
 
+-- Datas sempre no horário de São Paulo. Aula, prova e entrega só em dia útil;
+-- workshops das famílias aos sábados.
+create function pg_temp.util(n int, h time) returns timestamptz language sql as $
+  select (dia::date + h) at time zone 'America/Sao_Paulo'
+  from generate_series((now() at time zone 'America/Sao_Paulo')::date + 1,
+                       (now() at time zone 'America/Sao_Paulo')::date + 90, interval '1 day') dia
+  where extract(isodow from dia) < 6 order by dia offset n - 1 limit 1 $;
+create function pg_temp.sab(n int, h time) returns timestamptz language sql as $
+  select (dia::date + h) at time zone 'America/Sao_Paulo'
+  from generate_series((now() at time zone 'America/Sao_Paulo')::date + 1,
+                       (now() at time zone 'America/Sao_Paulo')::date + 90, interval '1 day') dia
+  where extract(isodow from dia) = 6 order by dia offset n - 1 limit 1 $;
+
 truncate evento, tarefa, material, reserva_livro, livro, compromisso_doacao, nota, observacao_aluno;
 
 do $$
@@ -21,18 +34,18 @@ declare
 begin
   -- ── Agenda ──
   insert into evento (titulo, descricao, tipo, inicio, fim, local, turma_id, publico, participantes, crianca_id, status, criado_por) values
-    ('Prova de matemática', 'Frações e problemas com as quatro operações.', 'prova', hoje + 3 + time '09:00', hoje + 3 + time '10:30', 'Sala 2', t_ref_m, array['estudante','responsavel','educacao','gestao']::papel[], null, null, 'confirmado', u_beatriz),
-    ('Entrega do caderno de leitura', 'Trazer o caderno com os três resumos do mês.', 'entrega', hoje + 5 + time '08:00', null, 'Sala 2', t_ref_m, array['estudante','responsavel','educacao','gestao']::papel[], null, null, 'confirmado', u_beatriz),
-    ('Aula de reforço de inglês', 'Revisão de cores, números e cumprimentos.', 'aula', hoje + 1 + time '14:00', hoje + 1 + time '15:30', 'Sala 1', t_ref_t, array['estudante','responsavel','educacao','gestao']::papel[], null, null, 'confirmado', u_beatriz),
-    ('Futebol no campinho', 'Atividade esportiva do Laboratório de Sonhos. Ir de tênis.', 'esportiva', hoje + 4 + time '13:00', hoje + 4 + time '15:00', 'Campo do Jardim Ângela', t_son_a, array['estudante','responsavel','educacao','gestao']::papel[], null, null, 'confirmado', u_beatriz),
-    ('Reunião de pais e professores', 'Conversa sobre o avanço da turma no semestre.', 'reuniao_pais', hoje + 6 + time '18:00', hoje + 6 + time '19:30', 'Salão do Instituto', null, array['responsavel','educacao','gestao']::papel[], null, null, 'confirmado', u_beatriz),
-    ('Conversa sobre o Kauã', 'Combinar rotina de leitura em casa.', 'reuniao_individual', hoje + 8 + time '17:00', hoje + 8 + time '17:30', 'Sala da coordenação', null, null, array[u_adriana, u_beatriz], c_kaua, 'confirmado', u_beatriz),
-    ('Visita à TechNorte Sistemas', 'Visita do mês: as crianças conhecem como funciona uma empresa de tecnologia e conversam com profissionais.', 'visita_empresa', hoje + 12 + time '09:00', hoje + 12 + time '12:00', 'TechNorte, Santo Amaro', null, null, null, null, 'confirmado', u_gestao),
-    ('Sábado das famílias: como escrever seu currículo', 'Oficina prática para responsáveis. Traga documento com foto; saímos com o currículo impresso.', 'workshop_responsaveis', (date_trunc('week', hoje)::date + 12) + time '09:00', (date_trunc('week', hoje)::date + 12) + time '12:00', 'Salão do Instituto', null, array['responsavel','gestao','educacao']::papel[], null, null, 'confirmado', u_gestao),
-    ('Sábado das famílias: finanças da casa', 'Como montar o orçamento do mês, separar a sobra e fugir de juros altos.', 'workshop_responsaveis', (date_trunc('week', hoje)::date + 26) + time '09:00', (date_trunc('week', hoje)::date + 26) + time '12:00', 'Salão do Instituto', null, array['responsavel','gestao','educacao']::papel[], null, null, 'confirmado', u_gestao),
-    ('Sábado das famílias: IA no dia a dia', 'Usar assistentes de IA no celular para escrever mensagens, tirar dúvidas e procurar emprego, com exemplos.', 'workshop_responsaveis', (date_trunc('week', hoje)::date + 40) + time '09:00', (date_trunc('week', hoje)::date + 40) + time '12:00', 'Sala de informática', null, array['responsavel','gestao','educacao']::papel[], null, null, 'confirmado', u_gestao),
-    ('Passeio ao Zoológico de São Paulo', 'Saída com as turmas do Laboratório de Sonhos. Depende da vaquinha do transporte.', 'passeio', hoje + 30 + time '08:00', hoje + 30 + time '16:00', 'Zoológico de São Paulo', null, null, null, null, 'confirmado', u_gestao),
-    ('Encontro com patrocinadores', 'Prestação de contas do semestre e plano de 2027.', 'encontro_patrocinadores', hoje + 20 + time '19:00', hoje + 20 + time '21:00', 'Salão do Instituto', null, array['doador_pf','empresa','gestao']::papel[], null, null, 'confirmado', u_gestao);
+    ('Prova de matemática', 'Frações e problemas com as quatro operações.', 'prova', pg_temp.util(3, '09:00'), pg_temp.util(3, '10:30'), 'Sala 2', t_ref_m, array['estudante','responsavel','educacao','gestao']::papel[], null, null, 'confirmado', u_beatriz),
+    ('Entrega do caderno de leitura', 'Trazer o caderno com os três resumos do mês.', 'entrega', pg_temp.util(5, '08:00'), null, 'Sala 2', t_ref_m, array['estudante','responsavel','educacao','gestao']::papel[], null, null, 'confirmado', u_beatriz),
+    ('Aula de reforço de inglês', 'Revisão de cores, números e cumprimentos.', 'aula', pg_temp.util(1, '14:00'), pg_temp.util(1, '15:30'), 'Sala 1', t_ref_t, array['estudante','responsavel','educacao','gestao']::papel[], null, null, 'confirmado', u_beatriz),
+    ('Futebol no campinho', 'Atividade esportiva do Laboratório de Sonhos. Ir de tênis.', 'esportiva', pg_temp.util(4, '13:00'), pg_temp.util(4, '15:00'), 'Campo do Jardim Ângela', t_son_a, array['estudante','responsavel','educacao','gestao']::papel[], null, null, 'confirmado', u_beatriz),
+    ('Reunião de pais e professores', 'Conversa sobre o avanço da turma no semestre.', 'reuniao_pais', pg_temp.util(6, '18:00'), pg_temp.util(6, '19:30'), 'Salão do Instituto', null, array['responsavel','educacao','gestao']::papel[], null, null, 'confirmado', u_beatriz),
+    ('Conversa sobre o Kauã', 'Combinar rotina de leitura em casa.', 'reuniao_individual', pg_temp.util(8, '17:00'), pg_temp.util(8, '17:30'), 'Sala da coordenação', null, null, array[u_adriana, u_beatriz], c_kaua, 'confirmado', u_beatriz),
+    ('Visita à TechNorte Sistemas', 'Visita do mês: as crianças conhecem como funciona uma empresa de tecnologia e conversam com profissionais.', 'visita_empresa', pg_temp.util(12, '09:00'), pg_temp.util(12, '12:00'), 'TechNorte, Santo Amaro', null, null, null, null, 'confirmado', u_gestao),
+    ('Sábado das famílias: como escrever seu currículo', 'Oficina prática para responsáveis. Traga documento com foto; saímos com o currículo impresso.', 'workshop_responsaveis', pg_temp.sab(1, '09:00'), pg_temp.sab(1, '12:00'), 'Salão do Instituto', null, array['responsavel','gestao','educacao']::papel[], null, null, 'confirmado', u_gestao),
+    ('Sábado das famílias: finanças da casa', 'Como montar o orçamento do mês, separar a sobra e fugir de juros altos.', 'workshop_responsaveis', pg_temp.sab(3, '09:00'), pg_temp.sab(3, '12:00'), 'Salão do Instituto', null, array['responsavel','gestao','educacao']::papel[], null, null, 'confirmado', u_gestao),
+    ('Sábado das famílias: IA no dia a dia', 'Usar assistentes de IA no celular para escrever mensagens, tirar dúvidas e procurar emprego, com exemplos.', 'workshop_responsaveis', pg_temp.sab(5, '09:00'), pg_temp.sab(5, '12:00'), 'Sala de informática', null, array['responsavel','gestao','educacao']::papel[], null, null, 'confirmado', u_gestao),
+    ('Passeio ao Zoológico de São Paulo', 'Saída com as turmas do Laboratório de Sonhos. Depende da vaquinha do transporte.', 'passeio', pg_temp.sab(4, '08:00'), pg_temp.sab(4, '16:00'), 'Zoológico de São Paulo', null, null, null, null, 'confirmado', u_gestao),
+    ('Encontro com patrocinadores', 'Prestação de contas do semestre e plano de 2027.', 'encontro_patrocinadores', pg_temp.util(20, '19:00'), pg_temp.util(20, '21:00'), 'Salão do Instituto', null, array['doador_pf','empresa','gestao']::papel[], null, null, 'confirmado', u_gestao);
 
   -- ── Tarefas, dicas e resumos ──
   insert into tarefa (turma_id, tipo, titulo, corpo, link, entrega, criado_por, criado_em) values

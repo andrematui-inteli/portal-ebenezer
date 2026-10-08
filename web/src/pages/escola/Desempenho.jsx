@@ -64,8 +64,9 @@ function PorAluno({ perfil }) {
 function Aluno({ criancaId, turmaId, perfil }) {
   const [form, setForm] = useState(null)
   const { dados, erro, carregando, recarregar } = useCarregar(async () => {
-    const [notas, obs, presenca] = await Promise.all([api.notas(criancaId), api.observacoes(criancaId), api.presencaIndividual(criancaId)])
-    return { notas, obs, presenca }
+    const [notas, obs, presenca, acesso] = await Promise.all([api.notas(criancaId), api.observacoes(criancaId),
+      api.presencaIndividual(criancaId), ehEquipe(perfil) ? api.acessoEstudante(criancaId) : null])
+    return { notas, obs, presenca, acesso }
   }, [criancaId])
   if (carregando) return <Carregando />
   if (erro) return <Erro mensagem={erro} tentarDeNovo={recarregar} />
@@ -100,6 +101,24 @@ function Aluno({ criancaId, turmaId, perfil }) {
         ? <div className="cartao"><Barras titulo="Notas por mês (0 a 10)" dados={notasMes} series={DISCIPLINAS} max={10} /></div>
         : <Vazio titulo="Ainda não há notas lançadas." />}
       {dados.presenca.length > 0 && <div className="cartao"><Barras titulo="Presença por mês" dados={presencaMes} series={PRESENCA} max={100} sufixo="%" /></div>}
+
+      {editar && dados.acesso && (
+        // Só professor e diretoria suspendem o acesso do aluno ao portal (migração 7).
+        <div className="cartao" style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
+          <p style={{ flex: 1, minWidth: 200 }}>
+            <strong>Acesso do aluno ao portal:</strong> {dados.acesso.suspenso_em ? 'suspenso.' : 'liberado.'}
+            <br /><span className="fonte">A família é avisada na conta dela de que o acesso foi suspenso pela equipe.</span>
+          </p>
+          <button className={`botao ${dados.acesso.suspenso_em ? '' : 'botao--perigo'}`}
+            onClick={async () => {
+              const suspender = !dados.acesso.suspenso_em
+              if (suspender && !confirm('Suspender o acesso deste aluno ao portal?')) return
+              await api.suspenderAcesso(criancaId, suspender); recarregar()
+            }}>
+            {dados.acesso.suspenso_em ? 'Liberar acesso' : 'Suspender acesso'}
+          </button>
+        </div>
+      )}
 
       <section className="pilha" aria-labelledby="obs">
         <div className="cabeca">

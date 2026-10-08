@@ -22,6 +22,8 @@ export const TIPOS = {
   encontro_patrocinadores: { nome: 'Encontro de apoiadores', grupo: 'instituto', cor: '#0D3F20', publico: ['doador_pf', 'empresa', 'gestao'], gestao: true },
   institucional: { nome: 'Evento do Instituto', grupo: 'instituto', cor: '#0D3F20', publico: null, gestao: true },
 }
+// Aula, prova e entrega só de segunda a sexta; o fim de semana é para visitas e extracurriculares.
+export const ACADEMICOS = ['aula', 'prova', 'entrega']
 export const corDoTipo = (t) => TIPOS[t]?.cor || '#5B6660'
 const PAPEIS = [['estudante', 'Alunos'], ['responsavel', 'Responsáveis'], ['educacao', 'Professores'], ['doador_pf', 'Doadores'], ['empresa', 'Empresas'], ['gestao', 'Diretoria']]
 const DIAS_SEMANA = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S']
@@ -176,6 +178,9 @@ function FormEvento({ perfil, fechar, salvo }) {
     ? (f.publico || PAPEIS.map(([v]) => v)).filter((x) => x !== p) : [...(f.publico || []), p])
   const enviar = async (ev) => {
     ev.preventDefault(); setErro(null)
+    if (ACADEMICOS.includes(f.tipo) && [0, 6].includes(new Date(`${f.data}T12:00:00`).getDay())) {
+      setErro('Não há aulas, provas nem entregas no fim de semana. Escolha um dia de segunda a sexta.'); return
+    }
     try {
       await api.salvarEvento({
         titulo: f.titulo.trim(), tipo: f.tipo, descricao: f.descricao.trim() || null, local: f.local.trim() || null,
@@ -189,6 +194,7 @@ function FormEvento({ perfil, fechar, salvo }) {
   return (
     <Modal titulo="Novo evento" fechar={fechar}>
       <form className="pilha" onSubmit={enviar}>
+        {ACADEMICOS.includes(f.tipo) && <p className="fonte">Aulas, provas e entregas só de segunda a sexta. O sábado é para visitas e atividades extracurriculares.</p>}
         {!gestao && <p className="fonte">Passeios, visitas a empresas, workshops e encontros com apoiadores são marcados pela diretoria.</p>}
         <div className="campo"><label htmlFor="ev-tipo">Tipo</label>
           <select id="ev-tipo" value={f.tipo} onChange={(e) => mudar('tipo', e.target.value)}>
