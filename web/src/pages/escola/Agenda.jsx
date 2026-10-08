@@ -52,7 +52,12 @@ export default function Agenda() {
   return (
     <Pagina titulo="Agenda" largo
       intro={perfil?.papel === 'estudante' ? 'Suas aulas, provas e passeios.' : 'Cada pessoa vê só o que é para ela. Conversas individuais aparecem só para quem participa.'}
-      acao={podeEditar ? <button className="botao" onClick={() => setForm('evento')}><Plus size={18} aria-hidden="true" />Novo evento</button>
+      acao={podeEditar ? (
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          <button className="botao" onClick={() => setForm('evento')}><Plus size={18} aria-hidden="true" />Novo evento</button>
+          <button className="botao botao--claro" onClick={() => setForm('familia')}><MessageCircle size={18} aria-hidden="true" />Conversa com família</button>
+        </div>
+      )
         : podePedir ? <button className="botao" onClick={() => setForm('conversa')}><MessageCircle size={18} aria-hidden="true" />Pedir conversa</button> : null}>
       <Filtros rotulo="Filtrar eventos" valor={filtro} mudar={setFiltro}
         opcoes={[['todos', 'Tudo'], ['escola', 'Aulas e provas'], ['reuniao', 'Reuniões'], ['instituto', 'Eventos do Instituto']]} />
@@ -79,7 +84,8 @@ export default function Agenda() {
       </div>
 
       {form === 'evento' && <FormEvento perfil={perfil} fechar={() => setForm(null)} salvo={() => { setForm(null); recarregar() }} />}
-      {form === 'conversa' && <FormConversa perfil={perfil} fechar={() => setForm(null)} salvo={() => { setForm(null); recarregar() }} />}
+      {form === 'familia' && <FormConversaFamilia perfil={perfil} fechar={() => setForm(null)} salvo={() => { setForm(null); recarregar() }} />}
+      {form === 'conversa' &&<FormConversa perfil={perfil} fechar={() => setForm(null)} salvo={() => { setForm(null); recarregar() }} />}
     </Pagina>
   )
 }
@@ -223,6 +229,61 @@ function FormEvento({ perfil, fechar, salvo }) {
         </fieldset>
         {erro && <Caixa tipo="erro" titulo={erro} />}
         <button className="botao botao--largo" disabled={!f.titulo.trim()}>Salvar na agenda</button>
+      </form>
+    </Modal>
+  )
+}
+
+// Professor ou diretoria chama a família de um aluno. Já entra confirmado e só os dois (e a diretoria) veem.
+function FormConversaFamilia({ perfil, fechar, salvo }) {
+  const { dados } = useCarregar(async () => {
+    const [matriculas, responsaveis] = await Promise.all([api.criancasVisiveis(), api.responsaveisVisiveis()])
+    const criancas = [...new Map(matriculas.map((m) => [m.crianca.id, m.crianca])).values()].sort((a, b) => a.nome_exibicao.localeCompare(b.nome_exibicao))
+    return { criancas, responsaveis }
+  })
+  const [f, setF] = useState({ crianca: '', com: '', data: hojeISO(), hora: '17:00', assunto: '', local: 'Sala da coordenação' })
+  const [erro, setErro] = useState(null)
+  const resp = (dados?.responsaveis || []).filter((r) => r.crianca_id === f.crianca)
+  const crianca = dados?.criancas.find((c) => c.id === f.crianca)
+  const enviar = async (ev) => {
+    ev.preventDefault(); setErro(null)
+    try {
+      await api.salvarEvento({
+        titulo: `Conversa sobre ${crianca.nome_exibicao.split(' ')[0]}: ${f.assunto.trim()}`, tipo: 'reuniao_individual', status: 'confirmado',
+        inicio: juntar(f.data, f.hora), fim: new Date(new Date(juntar(f.data, f.hora)).getTime() + 30 * 60000).toISOString(),
+        participantes: [f.com, perfil.id], crianca_id: f.crianca, criado_por: perfil.id, local: f.local.trim() || null,
+      })
+      salvo()
+    } catch (e) { setErro(e.message) }
+  }
+  return (
+    <Modal titulo="Conversa com a família" fechar={fechar}>
+      <form className="pilha" onSubmit={enviar}>
+        <p className="suave">A conversa aparece só na agenda do responsável, na sua e na da diretoria.</p>
+        <div className="campo"><label htmlFor="cf-cr">Aluno</label>
+          <select id="cf-cr" required value={f.crianca} onChange={(e) => setF({ ...f, crianca: e.target.value, com: '' })}>
+            <option value="">Escolha…</option>
+            {dados?.criancas.map((c) => <option key={c.id} value={c.id}>{c.nome_exibicao}</option>)}
+          </select></div>
+        {f.crianca && (
+          <div className="campo"><label htmlFor="cf-com">Responsável</label>
+            {resp.length === 0
+              ? <p className="fonte">Este aluno ainda não tem responsável com conta no portal. Fale com a diretoria para cadastrar.</p>
+              : <select id="cf-com" required value={f.com} onChange={(e) => setF({ ...f, com: e.target.value })}>
+                <option value="">Escolha…</option>
+                {resp.map((r) => <option key={r.perfil_id} value={r.perfil_id}>{r.nome}{r.parentesco && ` (${r.parentesco})`}</option>)}
+              </select>}
+          </div>
+        )}
+        <div className="campos-linha">
+          <div className="campo"><label htmlFor="cf-data">Dia</label><input id="cf-data" type="date" min={hojeISO()} required value={f.data} onChange={(e) => setF({ ...f, data: e.target.value })} /></div>
+          <div className="campo"><label htmlFor="cf-hora">Horário</label><input id="cf-hora" type="time" required value={f.hora} onChange={(e) => setF({ ...f, hora: e.target.value })} /></div>
+        </div>
+        <div className="campo"><label htmlFor="cf-assunto">Assunto</label>
+          <input id="cf-assunto" required maxLength={80} value={f.assunto} onChange={(e) => setF({ ...f, assunto: e.target.value })} placeholder="Ex.: rotina de leitura em casa" /></div>
+        <div className="campo"><label htmlFor="cf-local">Local</label><input id="cf-local" value={f.local} onChange={(e) => setF({ ...f, local: e.target.value })} /></div>
+        {erro && <Caixa tipo="erro" titulo={erro} />}
+        <button className="botao botao--largo" disabled={!f.com || !f.assunto.trim()}>Marcar conversa</button>
       </form>
     </Modal>
   )

@@ -26,6 +26,7 @@ import Necessidades from './pages/escola/Necessidades'
 import Ranking from './pages/escola/Ranking'
 import Desempenho from './pages/escola/Desempenho'
 import Feedback from './pages/escola/Feedback'
+import Cadastro from './pages/escola/Cadastro'
 
 // Vida escolar: quem entra em cada seção (o banco aplica o mesmo filtro por linha).
 const TODOS = ['estudante', 'responsavel', 'educacao', 'gestao', 'doador_pf', 'empresa']
@@ -33,7 +34,7 @@ const ADULTOS = TODOS.filter((p) => p !== 'estudante')
 const ESCOLA = [
   ['/escola', Escola, TODOS], ['/escola/agenda', Agenda, TODOS], ['/escola/tarefas', Tarefas, TODOS],
   ['/escola/estudos', Estudos, TODOS], ['/escola/biblioteca', Biblioteca, TODOS], ['/escola/desempenho', Desempenho, TODOS],
-  ['/escola/necessidades', Necessidades, ADULTOS], ['/escola/ranking', Ranking, ADULTOS], ['/escola/feedback', Feedback, ADULTOS],
+  ['/escola/necessidades', Necessidades, ADULTOS], ['/escola/ranking', Ranking, ADULTOS], ['/escola/feedback', Feedback, ADULTOS], ['/escola/cadastro', Cadastro, ['gestao']],
 ]
 
 // A navegação também respeita o perfil, mas quem garante o isolamento é o banco.

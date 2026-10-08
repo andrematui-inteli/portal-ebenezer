@@ -4,16 +4,16 @@
 
 -- Datas sempre no horário de São Paulo. Aula, prova e entrega só em dia útil;
 -- workshops das famílias aos sábados.
-create function pg_temp.util(n int, h time) returns timestamptz language sql as $
+create function pg_temp.util(n int, h time) returns timestamptz language sql as $$
   select (dia::date + h) at time zone 'America/Sao_Paulo'
   from generate_series((now() at time zone 'America/Sao_Paulo')::date + 1,
                        (now() at time zone 'America/Sao_Paulo')::date + 90, interval '1 day') dia
-  where extract(isodow from dia) < 6 order by dia offset n - 1 limit 1 $;
-create function pg_temp.sab(n int, h time) returns timestamptz language sql as $
+  where extract(isodow from dia) < 6 order by dia offset n - 1 limit 1 $$;
+create function pg_temp.sab(n int, h time) returns timestamptz language sql as $$
   select (dia::date + h) at time zone 'America/Sao_Paulo'
   from generate_series((now() at time zone 'America/Sao_Paulo')::date + 1,
                        (now() at time zone 'America/Sao_Paulo')::date + 90, interval '1 day') dia
-  where extract(isodow from dia) = 6 order by dia offset n - 1 limit 1 $;
+  where extract(isodow from dia) = 6 order by dia offset n - 1 limit 1 $$;
 
 truncate evento, tarefa, material, reserva_livro, livro, compromisso_doacao, nota, observacao_aluno;
 

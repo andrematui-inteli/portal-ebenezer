@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
 import {
   BarChart3, BookOpen, CalendarDays, ClipboardList, Home, LayoutGrid, Library, Link2, LogOut, MessageSquareText,
-  Package, Trophy, Upload, Users, Bell, User,
+  Package, Trophy, Upload, Users, Bell, User, UserPlus,
 } from 'lucide-react'
 import { api } from '@api'
 import { Moldura } from '../../components/Moldura'
@@ -26,6 +26,8 @@ export const SECOES = [
     papeis: ['responsavel', 'educacao', 'gestao', 'doador_pf', 'empresa'] },
   { para: '/escola/feedback', titulo: 'Sugestões', desc: 'Mande uma sugestão, reclamação ou elogio.', Icone: MessageSquareText, cor: '#5B6660',
     papeis: ['responsavel', 'educacao', 'gestao', 'doador_pf', 'empresa'] },
+  { para: '/escola/cadastro', titulo: 'Cadastro', desc: 'Famílias, alunos, professores e pedidos de acesso.', Icone: UserPlus, cor: '#0D3F20',
+    papeis: ['gestao'] },
 ]
 export const secoesDo = (papel) => SECOES.filter((s) => s.papeis.includes(papel))
 
