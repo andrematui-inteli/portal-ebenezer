@@ -27,6 +27,6 @@ export const INICIO_POR_PAPEL = {
   estudante: '/estudante',
   educacao: '/equipe',
   gestao: '/equipe',
-  doador_pf: '/apoio',
-  empresa: '/apoio',
+  doador_pf: '/escola',
+  empresa: '/escola',
 }

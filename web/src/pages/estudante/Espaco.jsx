@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Lock, Sprout, Trophy, Users } from 'lucide-react'
+import { LayoutGrid, Lock, Sprout, Trophy, Users } from 'lucide-react'
 import { api } from '@api'
 import { Moldura } from '../../components/Moldura'
 
@@ -7,6 +7,7 @@ const NAV_ESTUDANTE = [
   { para: '/estudante', rotulo: 'Minha trilha', Icone: Sprout, fim: true, cor: 'trilha' },
   { para: '/estudante/conquistas', rotulo: 'Conquistas', Icone: Trophy, cor: 'conquistas' },
   { para: '/estudante/turma', rotulo: 'Minha turma', Icone: Users, cor: 'turma' },
+  { para: '/escola', rotulo: 'Escola', Icone: LayoutGrid, cor: 'escola' },
 ]
 
 // Espaço da criança: navegação própria, uma cor por tela, sem caminho para telas adultas.

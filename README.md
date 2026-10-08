@@ -15,15 +15,35 @@ Todo o desenvolvimento e toda a demonstração usam **somente dados sintéticos*
 - [x] Testes de permissão — `supabase/tests/`
 - [x] Gerador de dados sintéticos — `supabase/seed/dados_sinteticos.sql`
 - [x] Front-end, parte 1: área pública, família, estudante e equipe de educação — `web/`
-- [ ] Front-end, parte 2: apoiadores, gestão, publicação de avisos e carências, resumos de IA
+- [x] Vida escolar (migração 6): agenda por perfil, tarefas, links de estudo, biblioteca com reserva, tabela de necessidades com vaquinha, ranking de apoiadores (pessoas e empresas), notas e desempenho por aluno e por turma, sugestões e reclamações — `web/src/pages/escola/`
+- [ ] Front-end, parte 2: gestão, publicação de avisos e carências, resumos de IA
 - [ ] Documentação de handover
+
+## Vida escolar: o que cada perfil vê
+
+Tudo fica em **Escola** (`/escola`), na barra de navegação de cada perfil. A regra é imposta pelo banco (RLS da migração 6), não só pela navegação.
+
+| Seção | Aluno | Responsável | Doador / Empresa | Professor | Diretoria |
+| --- | --- | --- | --- | --- | --- |
+| Agenda | eventos da turma e abertos | turma dos filhos, reunião de pais, workshops; pede conversa | eventos abertos e encontro de apoiadores; pede conversa | marca aula, prova, entrega, esporte e reunião de pais; confirma conversas | marca tudo, inclusive passeio, visita a empresa, workshop e encontro com patrocinadores |
+| Tarefas, dicas e resumos | vê | vê | vê | publica | publica |
+| Links de estudo | vê | vê | vê | adiciona | adiciona |
+| Biblioteca | reserva (até 2) | reserva | reserva | entrega e recebe | entrega e recebe |
+| Necessidades | — | vê e promete doar | vê e promete doar | propõe (vai para aprovação) | publica e confirma doação recebida |
+| Ranking | — | vê | vê (e aparece nele) | vê | vê |
+| Desempenho | o próprio e a turma | os filhos e as turmas | só turmas (agregado) | lança notas e comentários das suas turmas | tudo |
+| Sugestões | — | envia | envia | responde | responde |
+
+Conversa individual só aparece para os participantes e a diretoria. O ranking só aparece para quem está logado e mostra o nome apenas de quem autorizou; os demais aparecem como "Apoiador anônimo". Doar pelo portal registra uma **intenção**: só conta na barra e no ranking quando a diretoria confirma que chegou.
 
 ## Como aplicar o banco no Supabase
 
 1. Crie um projeto no Supabase na região São Paulo (`sa-east-1`).
-2. No SQL Editor, rode os arquivos de `supabase/migrations/` em ordem numérica (são cinco).
+2. No SQL Editor, rode os arquivos de `supabase/migrations/` em ordem numérica (são seis).
 
 3. Rode `supabase/seed/dados_sinteticos.sql` para popular o banco. Ele pode ser rodado de novo a qualquer momento: apaga os dados sintéticos anteriores e gera tudo outra vez, com datas relativas ao dia. **Rode de novo antes de cada demonstração**, para os painéis aparecerem atualizados.
+
+4. Logo depois, rode `supabase/seed/dados_escola.sql`: agenda, tarefas, livros, notas, vaquinhas e os links reais de estudo.
 
 ### Contas de demonstração
 

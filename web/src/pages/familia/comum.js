@@ -1,11 +1,7 @@
-import { Home, Bell, User } from 'lucide-react'
 import { api } from '@api'
 
-export const NAV_FAMILIA = [
-  { para: '/familia', rotulo: 'Início', Icone: Home, fim: true },
-  { para: '/familia/avisos', rotulo: 'Avisos', Icone: Bell },
-  { para: '/familia/conta', rotulo: 'Minha conta', Icone: User },
-]
+import { navPorPapel } from '../escola/comum'
+export const NAV_FAMILIA = navPorPapel('responsavel')
 
 export const consentimentoAtivo = (v) => v.consentimento_em && !v.consentimento_revogado_em
 
