@@ -56,7 +56,7 @@ Cursos curtos para um adulto fazer junto com o filho adolescente (12 a 17 anos),
 ## Como aplicar o banco no Supabase
 
 1. Crie um projeto no Supabase na região São Paulo (`sa-east-1`).
-2. No SQL Editor, rode os arquivos de `supabase/migrations/` em ordem numérica (são dez).
+2. No SQL Editor, rode os arquivos de `supabase/migrations/` em ordem numérica (são onze).
 
 3. Rode `supabase/seed/dados_sinteticos.sql` para popular o banco. Ele pode ser rodado de novo a qualquer momento: apaga os dados sintéticos anteriores e gera tudo outra vez, com datas relativas ao dia. **Rode de novo antes de cada demonstração**, para os painéis aparecerem atualizados.
 

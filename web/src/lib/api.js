@@ -11,6 +11,7 @@ function traduzErro(error) {
   const m = error?.message || ''
   if (/Invalid login credentials/i.test(m)) return 'E-mail ou senha não conferem. Confira e tente de novo.'
   if (/Failed to fetch|NetworkError/i.test(m)) return 'Sem conexão com a internet. Tente de novo em instantes.'
+  if (/statement timeout|canceling statement/i.test(m)) return 'O servidor demorou demais para responder. Tente de novo em instantes; se continuar, avise a gestão.'
   if (/permission denied|row-level security/i.test(m)) return 'Este conteúdo não está disponível para o seu perfil.'
   return m.replace(/^.*?ERROR:\s*/, '') || 'Algo não saiu como esperado. Tente de novo.'
 }
