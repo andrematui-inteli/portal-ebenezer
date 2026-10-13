@@ -4,6 +4,28 @@ Portal de monitoramento, engajamento e avisos do Instituto Ebenézer — MVP do 
 
 Todo o desenvolvimento e toda a demonstração usam **somente dados sintéticos**.
 
+**Para operar o portal, comece pela [documentação de handover](docs/HANDOVER.md).** Vídeo demonstrativo: [Google Drive](https://drive.google.com/file/d/1-9t97KqUR_nVqe_IbLPejXfta1f6iOR9/view?usp=drive_link).
+
+## Acesso para avaliação
+
+**Site:** https://portal-ebenezer.netlify.app
+
+Todas as contas usam a senha **`Ebenezer#2026`**. Os dados são sintéticos: crianças, famílias, doações e empresas são fictícias.
+
+| Perfil | E-mail | O que vale a pena ver |
+| --- | --- | --- |
+| Gestão | `gestao@ebenezer.test` | Visão completa: pendências, Escola, cadastro, inscrições das Aulas em família, valores no quadro de apoiadores |
+| Educação | `educacao@ebenezer.test` | Pendências (Primeira Infância atrasada de propósito), crianças faltando mais, importação de planilha com prévia e desfazer, turmas |
+| Responsável | `responsavel@ebenezer.test` | Adriana, mãe do Kauã e da Ana: presença, leitura em série escolar, conquistas, avisos, Minha conta |
+| Responsável no primeiro acesso | `pendente@ebenezer.test` | Rosa: a autorização em três passos antes de qualquer dado |
+| Estudante | `estudante@ebenezer.test` | Kauã, 9 anos: árvore da leitura, conquistas e turma. Para sair, PIN **`1234`** |
+| Doadora | `doador@ebenezer.test` | Marisa: Escola, necessidades e o próprio total no quadro de apoiadores |
+| Empresa | `empresa@ebenezer.test` | Roberto, da TechNorte Sistemas: Escola e necessidades, sem acesso a dados individuais |
+
+Sem entrar, o visitante vê a página pública, as carências, as Aulas em família e o formulário de pedido de acesso.
+
+Vídeo demonstrativo: [Google Drive](https://drive.google.com/file/d/1-9t97KqUR_nVqe_IbLPejXfta1f6iOR9/view?usp=drive_link) · Documentação de handover: [docs/HANDOVER.md](docs/HANDOVER.md)
+
 ## Arquitetura
 
 - **Banco, autenticação e permissões:** Supabase (Postgres, região São Paulo), com Row Level Security por perfil.
@@ -17,7 +39,7 @@ Todo o desenvolvimento e toda a demonstração usam **somente dados sintéticos*
 - [x] Front-end, parte 1: área pública, família, estudante e equipe de educação — `web/`
 - [x] Vida escolar (migração 6): agenda por perfil, tarefas, links de estudo, biblioteca com reserva, tabela de necessidades com vaquinha, ranking de apoiadores (pessoas e empresas), notas e desempenho por aluno e por turma, sugestões e reclamações — `web/src/pages/escola/`
 - [ ] Front-end, parte 2: gestão, publicação de avisos e carências, resumos de IA
-- [ ] Documentação de handover
+- [x] Documentação de handover — [docs/HANDOVER.md](docs/HANDOVER.md)
 
 ## Vida escolar: o que cada perfil vê
 
@@ -70,13 +92,13 @@ Senha de todas: `Ebenezer#2026`. PIN de saída do espaço do Kauã: `1234`.
 
 | E-mail | Perfil | O que mostra |
 | --- | --- | --- |
-| gestao@ebenezer.test | Gestão (Elias) | Painel completo, fila de aprovação, acessos |
+| gestao@ebenezer.test | Gestão (Elias) | Visão completa, cadastro, Aulas em família |
 | educacao@ebenezer.test | Educação (Beatriz) | Turmas, importação, Primeira Infância desatualizada |
 | responsavel@ebenezer.test | Responsável (Adriana) | Dois filhos: Kauã (reforço e Sonhos) e Ana (Primeira Infância) |
 | pendente@ebenezer.test | Responsável (Rosa) | Primeiro acesso, ainda sem autorização (tela T-11) |
 | estudante@ebenezer.test | Estudante (Kauã, 9 anos) | Trilha de leitura, conquistas, turma |
 | doador@ebenezer.test | Doadora (Marisa) | Doação mensal desde fevereiro, nome autorizado no reconhecimento |
-| empresa@ebenezer.test | Empresa (Roberto, TechNorte) | Painel de patrocinador |
+| empresa@ebenezer.test | Empresa (Roberto, TechNorte) | Escola e necessidades |
 
 ### O que o gerador cria
 

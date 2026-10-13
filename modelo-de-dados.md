@@ -1,0 +1,103 @@
+# Modelo de dados — Portal Ebenézer
+
+Banco Postgres no Supabase (região São Paulo). Toda permissão por perfil é imposta pelo banco com Row Level Security, não pela navegação. Os arquivos de origem estão em `supabase/migrations/`.
+
+## Diagrama
+
+```mermaid
+erDiagram
+  programa ||--o{ turma : tem
+  turma ||--o{ matricula : recebe
+  crianca ||--o{ matricula : "está em"
+  crianca ||--o{ presenca : registra
+  turma ||--o{ presenca : "acontece em"
+  turma ||--o{ presenca_agregada : "conta (programas sensíveis)"
+  crianca ||--o{ avaliacao : recebe
+  nivel_parceiro ||--o{ avaliacao : traduz
+  crianca ||--o{ conquista : acumula
+  tipo_conquista ||--o{ conquista : define
+  turma ||--o{ marco_turma : atinge
+  perfil ||--o{ responsavel_crianca : "é responsável"
+  crianca ||--o{ responsavel_crianca : "tem responsável"
+  crianca ||--o| acesso_estudante : "acessa como"
+  perfil ||--o{ educador_turma : educa
+  turma ||--o{ educador_turma : "é educada por"
+  lote_importacao ||--o{ presenca : origina
+  lote_importacao ||--o{ avaliacao : origina
+  lote_importacao ||--o{ lote_alteracao : "guarda o anterior"
+  perfil ||--o{ doacao : faz
+  carencia ||--o{ doacao : recebe
+  perfil ||--o{ aviso : publica
+  perfil ||--o{ sugestao : envia
+  indicador ||--o{ indicador_valor : registra
+```
+
+## Decisões que o modelo impõe
+
+| Decisão | Como está no banco |
+| --- | --- |
+| Minimização de dados | Não existe coluna de endereço, documento, renda, saúde, registro clínico ou foto de criança. A criança tem só nome de exibição, ano de nascimento e o código do parceiro. |
+| Programas sensíveis (Vivências Terapêuticas) | `programa.sensivel = true`. Um gatilho recusa presença individual; só entra `presenca_agregada` (total por turma e dia). Matrícula nesses programas aparece só para a gestão e o responsável. |
+| Consentimento revogável (RF-03) | `responsavel_crianca.consentimento_em` e `consentimento_revogado_em`. Sem consentimento ativo, presença, avaliação e conquistas somem para o responsável, mas o vínculo continua. |
+| Acesso da criança liberado pelo responsável (RF-04) | `acesso_estudante.suspenso_em`. Com acesso suspenso, a criança deixa de ver qualquer dado na hora. |
+| Valor doado nunca é público (princípio 2) | `doacao` é visível só ao próprio apoiador e à gestão. A visão pública `publico_reconhecimento` não tem coluna de valor: mostra meses de apoio e carências apoiadas, só de quem autorizou. |
+| Importação com prévia e desfazer (RF-11) | Função `importar(tipo, arquivo, linhas, confirmar)`. Sem confirmar, devolve a prévia e os erros por linha. Com confirmar, grava tudo ou nada. `desfazer_lote(lote)` restaura o anterior a partir de `lote_alteracao`. |
+| Tradução em série escolar (RF-08) | `nivel_parceiro` guarda a escala da Alicerce. A visão `avaliacao_traduzida` já entrega a série equivalente. |
+| Conquistas só se acumulam (RF-09) | Geradas por gatilho a cada bloco completo e a cada nível novo de leitura. A primeira avaliação é linha de base e não gera conquista. Não há política de exclusão. |
+| Agregados sem reidentificação | Visões `publico_*` suprimem números de grupos com menos de 5 crianças. |
+| Ninguém muda o próprio papel | Gatilho em `perfil` recusa troca de papel ou de status por quem não é gestão. |
+| Dado desatualizado é estado normal | Visão `painel_atualizacao`: reforço desatualizado após 7 dias sem presença, programas de sábado após 14. |
+
+## Vida escolar (migração 6)
+
+| Tabela ou visão | Para quê | Regra principal |
+| --- | --- | --- |
+| `evento` | Agenda | `participantes` preenchido: só eles (e a gestão) veem. Senão, `publico` (papéis) e `turma_id` filtram. Gatilho `trava_evento`: passeio, visita a empresa, workshop e encontro com patrocinadores só pela gestão; responsável e apoiador só pedem conversa (`status = 'solicitado'`). |
+| `equipe_contato` | Escolher com quem pedir conversa | Só nome e papel da equipe. |
+| `tarefa` | Tarefas, dicas e resumos por turma | Leitura para todo perfil logado; publicação pela equipe da turma. |
+| `material` | Links de estudo | Leitura aberta; edição pela equipe. |
+| `livro`, `reserva_livro`, `livro_disponivel`, `reservar_livro()` | Biblioteca | Reserva atômica, no máximo 2 abertas por pessoa. |
+| `carencia` (+ `unidade`, `condicao`, `vaquinha`) | Tabela de necessidades | Vaquinha conta em reais. |
+| `compromisso_doacao`, `confirmar_compromisso()` | Intenção de doar | Vira `doacao` e soma no progresso só quando a gestão confirma. |
+| `ranking_apoiadores` | Ranking de pessoas e de empresas | Só perfis adultos logados; nome só com autorização. |
+| `nota`, `observacao_aluno` | Notas e comentários | Regra `ve_crianca`: aluno, responsável, educador da turma e gestão. |
+| `desempenho_turma` | Gráficos por turma | Agregado por mês; grupos com menos de 5 crianças ficam sem número. |
+| `sugestao.tipo` | Sugestão, reclamação ou elogio | Mesma regra de leitura das sugestões. |
+
+## Perfis
+
+Os sete perfis da matriz de permissões são o enum `papel` (`responsavel`, `estudante`, `educacao`, `doador_pf`, `empresa`, `gestao`) mais o visitante, que é o acesso anônimo sem perfil.
+
+## Testes de permissão
+
+`supabase/tests/permissoes_test.sql` entra como cada perfil e confere 35 regras: o que cada um vê, o que não vê e o que não consegue fazer. Roda em Postgres local com o stub `tests/00_stub_supabase_local.sql`, que imita o mínimo do Supabase.
+
+## Aulas em família (migração 10)
+
+| Tabela ou visão | Para que serve |
+| --- | --- |
+| `curso_familia` | Curso para adultos e adolescentes: tema, faixa etária, vagas por família, prazo e situação (rascunho, inscrições abertas, em andamento, encerrado). |
+| `encontro_familia` | Os encontros de cada curso, com data, horário e resumo. |
+| `inscricao_familia` | Uma linha por família: nome e WhatsApp do adulto, número de adultos, idades dos jovens e situação (inscrita, lista de espera, confirmada, cancelada). Não se liga a `crianca`. |
+| `publico_cursos_familia` | Vitrine pública com vagas restantes, sem nenhum dado pessoal. |
+| `inscrever_familia()` | Inscrição pública: confere faixa etária, prazo e contato repetido, e decide entre vaga e lista de espera. |
+
+Só a gestão lê as inscrições; quem se inscreveu logado vê a própria. Ao cancelar uma inscrição com vaga, um gatilho passa a vaga para a primeira família da lista de espera.
+
+## Vida escolar (migrações 6 a 9)
+
+| Tabela ou visão | Para que serve |
+| --- | --- |
+| `evento` | Agenda por perfil: aulas, provas, entregas, reuniões de pais, passeios, workshops e pedidos de conversa com a equipe. |
+| `equipe_contato` | Visão com os contatos da equipe que cada perfil pode chamar para conversar. |
+| `tarefa`, `material` | Tarefas, dicas e resumos publicados pela equipe, e links de estudo. |
+| `livro`, `reserva_livro`, `livro_disponivel`, `reservar_livro()` | Acervo da biblioteca e reservas, com disponibilidade calculada. |
+| `compromisso_doacao`, `confirmar_compromisso()` | Intenção de doação para uma necessidade (vaquinha); só conta no progresso depois que a gestão confirma. |
+| `config_pix` | Chave PIX do Instituto, editável pela gestão; o portal só gera o "copia e cola", não processa pagamento. |
+| `nota`, `observacao_aluno`, `desempenho_turma` | Notas por aluno, comentários dos professores e média por turma (grupos com menos de 5 crianças suprimidos). A criança vê as próprias notas, mas não os comentários. |
+| `ranking_apoiadores` | Quadro de apoiadores por constância (meses de apoio). O valor aparece só para o próprio apoiador e para a gestão. |
+| `cadastrar_pessoa()`, `cadastrar_crianca()`, `vincular_responsavel()`, `liberar_acesso_estudante()` | Cadastro feito pela gestão na tela Escola > Cadastro, sem precisar abrir o painel do Supabase. |
+
+## Desempenho das regras de acesso (migração 11)
+
+As regras de leitura de presença, avaliação, conquista e nota calculam uma vez, por consulta, o conjunto de crianças que o usuário pode ver (`privado.criancas_visiveis()`), em vez de testar linha por linha. O que cada perfil vê não mudou; a tela de pendências deixou de estourar o limite de tempo do Supabase.
