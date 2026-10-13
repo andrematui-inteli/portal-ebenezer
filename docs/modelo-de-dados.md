@@ -71,3 +71,15 @@ Os sete perfis da matriz de permissões são o enum `papel` (`responsavel`, `est
 ## Testes de permissão
 
 `supabase/tests/permissoes_test.sql` entra como cada perfil e confere 35 regras: o que cada um vê, o que não vê e o que não consegue fazer. Roda em Postgres local com o stub `tests/00_stub_supabase_local.sql`, que imita o mínimo do Supabase.
+
+## Aulas em família (migração 10)
+
+| Tabela ou visão | Para que serve |
+| --- | --- |
+| `curso_familia` | Curso para adultos e adolescentes: tema, faixa etária, vagas por família, prazo e situação (rascunho, inscrições abertas, em andamento, encerrado). |
+| `encontro_familia` | Os encontros de cada curso, com data, horário e resumo. |
+| `inscricao_familia` | Uma linha por família: nome e WhatsApp do adulto, número de adultos, idades dos jovens e situação (inscrita, lista de espera, confirmada, cancelada). Não se liga a `crianca`. |
+| `publico_cursos_familia` | Vitrine pública com vagas restantes, sem nenhum dado pessoal. |
+| `inscrever_familia()` | Inscrição pública: confere faixa etária, prazo e contato repetido, e decide entre vaga e lista de espera. |
+
+Só a gestão lê as inscrições; quem se inscreveu logado vê a própria. Ao cancelar uma inscrição com vaga, um gatilho passa a vaga para a primeira família da lista de espera.

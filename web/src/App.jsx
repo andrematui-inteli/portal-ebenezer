@@ -27,6 +27,9 @@ import Ranking from './pages/escola/Ranking'
 import Desempenho from './pages/escola/Desempenho'
 import Feedback from './pages/escola/Feedback'
 import Cadastro from './pages/escola/Cadastro'
+import AulasFamilia from './pages/escola/AulasFamilia'
+import CursosFamilia from './pages/aulas/Cursos'
+import CursoFamilia from './pages/aulas/Curso'
 
 // Vida escolar: quem entra em cada seção (o banco aplica o mesmo filtro por linha).
 const TODOS = ['estudante', 'responsavel', 'educacao', 'gestao', 'doador_pf', 'empresa']
@@ -34,7 +37,7 @@ const ADULTOS = TODOS.filter((p) => p !== 'estudante')
 const ESCOLA = [
   ['/escola', Escola, TODOS], ['/escola/agenda', Agenda, TODOS], ['/escola/tarefas', Tarefas, TODOS],
   ['/escola/estudos', Estudos, TODOS], ['/escola/biblioteca', Biblioteca, TODOS], ['/escola/desempenho', Desempenho, TODOS],
-  ['/escola/necessidades', Necessidades, ADULTOS], ['/escola/ranking', Ranking, ADULTOS], ['/escola/feedback', Feedback, ADULTOS], ['/escola/cadastro', Cadastro, ['gestao']],
+  ['/escola/necessidades', Necessidades, ADULTOS], ['/escola/ranking', Ranking, ADULTOS], ['/escola/feedback', Feedback, ADULTOS], ['/escola/cadastro', Cadastro, ['gestao']], ['/escola/aulas-familia', AulasFamilia, ['gestao']],
 ]
 
 // A navegação também respeita o perfil, mas quem garante o isolamento é o banco.
@@ -68,6 +71,8 @@ function Rotas() {
       <Route path="/apoiar" element={<Apoiar />} />
       <Route path="/entrar" element={<Entrar />} />
       <Route path="/pedir-acesso" element={<PedirAcesso />} />
+      <Route path="/aulas-em-familia" element={<CursosFamilia />} />
+      <Route path="/aulas-em-familia/:slug" element={<CursoFamilia />} />
 
       <Route path="/familia" element={<Exige papeis={['responsavel']}><InicioFamilia /></Exige>} />
       <Route path="/familia/crianca/:id" element={<Exige papeis={['responsavel']}><Crianca /></Exige>} />

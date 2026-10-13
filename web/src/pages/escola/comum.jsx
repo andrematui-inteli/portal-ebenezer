@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
 import {
   BarChart3, BookOpen, CalendarDays, ClipboardList, Home, LayoutGrid, Library, Link2, LogOut, MessageSquareText,
-  Package, Trophy, Upload, Users, Bell, User, UserPlus,
+  Package, Trophy, Upload, Users, Bell, User, UserPlus, UsersRound, CalendarHeart,
 } from 'lucide-react'
 import { api } from '@api'
 import { Moldura } from '../../components/Moldura'
@@ -22,7 +22,11 @@ export const SECOES = [
     papeis: ['estudante', 'responsavel', 'educacao', 'gestao', 'doador_pf', 'empresa'] },
   { para: '/escola/necessidades', titulo: 'Necessidades', desc: 'O que está faltando e quanto já foi doado.', Icone: Package, cor: '#B4570B',
     papeis: ['responsavel', 'educacao', 'gestao', 'doador_pf', 'empresa'] },
-  { para: '/escola/ranking', titulo: 'Ranking de apoio', desc: 'Quem mais tem ajudado, pessoas e empresas.', Icone: Trophy, cor: '#8C6100',
+  { para: '/aulas-em-familia', titulo: 'Aulas em família', desc: 'Cursos para fazer junto com seu filho adolescente: IA e dinheiro.', Icone: UsersRound, cor: '#1F5FA8',
+    papeis: ['responsavel', 'educacao', 'doador_pf', 'empresa'] },
+  { para: '/escola/aulas-familia', titulo: 'Aulas em família', desc: 'Inscrições, lista de espera e confirmação das famílias.', Icone: UsersRound, cor: '#1F5FA8',
+    papeis: ['gestao'] },
+  { para: '/escola/ranking', titulo: 'Quem apoia', desc: 'Pessoas e empresas que apoiam com constância.', Icone: CalendarHeart, cor: '#8C6100',
     papeis: ['responsavel', 'educacao', 'gestao', 'doador_pf', 'empresa'] },
   { para: '/escola/feedback', titulo: 'Sugestões', desc: 'Mande uma sugestão, reclamação ou elogio.', Icone: MessageSquareText, cor: '#5B6660',
     papeis: ['responsavel', 'educacao', 'gestao', 'doador_pf', 'empresa'] },
@@ -41,7 +45,7 @@ export function navPorPapel(papel) {
     { para: '/equipe/importar', rotulo: 'Importar', Icone: Upload }, { para: '/equipe/turmas', rotulo: 'Turmas', Icone: Users }]
   return [
     { ...ESCOLA, fim: true }, { para: '/escola/agenda', rotulo: 'Agenda', Icone: CalendarDays },
-    { para: '/escola/necessidades', rotulo: 'Necessidades', Icone: Package }, { para: '/escola/ranking', rotulo: 'Ranking', Icone: Trophy }]
+    { para: '/escola/necessidades', rotulo: 'Necessidades', Icone: Package }, { para: '/aulas-em-familia', rotulo: 'Em família', Icone: UsersRound }]
 }
 
 export const ehEquipe = (p) => p?.papel === 'educacao' || p?.papel === 'gestao'

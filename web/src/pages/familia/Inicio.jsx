@@ -1,5 +1,5 @@
 import { Link, Navigate } from 'react-router-dom'
-import { ChevronRight, Star, CalendarDays } from 'lucide-react'
+import { ChevronRight, Star, CalendarDays, UsersRound } from 'lucide-react'
 import { api } from '@api'
 import { Moldura } from '../../components/Moldura'
 import { Carregando, Erro, Caixa } from '../../components/comuns'
@@ -48,6 +48,14 @@ function Conteudo({ vinculos, resumos, avisos, perfilId }) {
           Você pausou em Minha conta. Nada sobre a criança aparece no portal enquanto estiver pausado.
         </Caixa>
       ))}
+      <Link to="/aulas-em-familia" className="cartao cartao--link" style={{ display: 'flex', gap: 14, alignItems: 'center', background: '#E3EEFB', borderColor: 'transparent' }}>
+        <UsersRound size={32} color="#1F5FA8" aria-hidden="true" style={{ flex: 'none' }} />
+        <span style={{ flex: 1 }}>
+          <strong>Aulas em família</strong><br />
+          <span className="suave">Cursos de IA e de dinheiro para fazer junto com seu filho de 12 a 17 anos. Gratuito.</span>
+        </span>
+        <ChevronRight aria-hidden="true" />
+      </Link>
       {proximos.length > 0 && (
         <section className="pilha" aria-labelledby="prox">
           <h2 id="prox">Próximos avisos</h2>

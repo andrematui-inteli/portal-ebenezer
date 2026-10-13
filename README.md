@@ -43,14 +43,26 @@ Tudo fica em **Escola** (`/escola`), na barra de navegação de cada perfil. A r
 - **Comentários dos professores:** ficam entre família e equipe; a própria criança não os vê.
 - **Agenda:** aula, prova e entrega só de segunda a sexta (regra no banco). O fim de semana é para visitas e atividades extracurriculares.
 
+## Aulas em família
+
+Cursos curtos para um adulto fazer junto com o filho adolescente (12 a 17 anos), pensados para engajar os jovens trazendo a família inteira. Pilotos: **IA em família** e **Dinheiro em família**, quatro encontros cada.
+
+- **Divulgação:** página pública em `/aulas-em-familia`, também na barra do visitante ("Em família"), na Escola de cada perfil adulto e num cartão na tela inicial da família. Cada curso tem botão de mandar no WhatsApp com mensagem pronta.
+- **Inscrição separada:** aberta à comunidade, com ou sem conta, e sem ligação com o cadastro das crianças. Não gera presença, avaliação nem acompanhamento.
+- **Minimização:** do adulto, nome e WhatsApp; do jovem, só a idade, para conferir a faixa do curso.
+- **Vagas por família:** quando lotam, a inscrição vai para a lista de espera; se alguém cancela, a próxima família sobe sozinha.
+- **Gestão:** em Escola → Aulas em família, a gestão vê inscritos, confirma, cancela, dá vaga a quem está na espera, abre e encerra inscrições e baixa a lista. A equipe de educação não vê os inscritos.
+
 ## Como aplicar o banco no Supabase
 
 1. Crie um projeto no Supabase na região São Paulo (`sa-east-1`).
-2. No SQL Editor, rode os arquivos de `supabase/migrations/` em ordem numérica (são nove).
+2. No SQL Editor, rode os arquivos de `supabase/migrations/` em ordem numérica (são dez).
 
 3. Rode `supabase/seed/dados_sinteticos.sql` para popular o banco. Ele pode ser rodado de novo a qualquer momento: apaga os dados sintéticos anteriores e gera tudo outra vez, com datas relativas ao dia. **Rode de novo antes de cada demonstração**, para os painéis aparecerem atualizados.
 
 4. Logo depois, rode `supabase/seed/dados_escola.sql`: agenda, tarefas, livros, notas, vaquinhas e os links reais de estudo.
+
+5. Por fim, rode `supabase/seed/dados_aulas_familia.sql`: os dois cursos-piloto de aulas em família, com inscrições fictícias.
 
 ### Contas de demonstração
 
@@ -80,7 +92,7 @@ Com Postgres 15 ou superior:
 createdb portal
 psql -d portal -f supabase/tests/00_stub_supabase_local.sql
 for f in supabase/migrations/*.sql; do psql -d portal -v ON_ERROR_STOP=1 -f "$f"; done
-psql -d portal -f supabase/tests/permissoes_test.sql
+psql -d portal -f supabase/tests/permissoes_test.sql -f supabase/tests/escola_test.sql -f supabase/tests/aulas_familia_test.sql
 psql -d portal -f supabase/tests/escola_test.sql
 ```
 

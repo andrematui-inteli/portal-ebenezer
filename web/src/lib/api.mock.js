@@ -1,4 +1,5 @@
 import { apiEscola } from './api.mock.escola'
+import { apiFamilia } from './api.mock.familia'
 // Dados de exemplo para revisar as telas sem Supabase (npm run dev:mock).
 // Mesmo formato das respostas reais de api.js. Nunca entra no build de produção.
 
@@ -224,4 +225,5 @@ export const api = {
     ])
   },
   ...apiEscola(personaAtual, espera),
+  ...apiFamilia(personaAtual, espera),
 }

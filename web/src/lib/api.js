@@ -236,4 +236,31 @@ export const api = {
   async responderFeedback(id, resposta, perfilId) {
     ok(await supabase.from('sugestao').update({ resposta, respondida_por: perfilId, respondida_em: new Date().toISOString() }).eq('id', id))
   },
+  // ───────── Aulas em família ─────────
+  async cursosFamilia() {
+    return ok(await supabase.from('publico_cursos_familia').select('*').order('primeiro_encontro', { ascending: true, nullsFirst: false }))
+  },
+  async cursoFamilia(slug) {
+    const curso = ok(await supabase.from('publico_cursos_familia').select('*').eq('slug', slug).maybeSingle())
+    if (!curso) return null
+    const encontros = ok(await supabase.from('encontro_familia').select('*').eq('curso_id', curso.id).order('numero'))
+    return { ...curso, encontros }
+  },
+  async inscreverFamilia({ curso, nome, contato, idades, adultos, jaParticipa }) {
+    return ok(await supabase.rpc('inscrever_familia', {
+      p_curso: curso, p_nome: nome, p_contato: contato, p_idades: idades, p_adultos: adultos, p_ja_participa: jaParticipa }))
+  },
+  async minhasInscricoesFamilia() {
+    const { data: { session } } = await supabase.auth.getSession()
+    if (!session) return []
+    return ok(await supabase.from('inscricao_familia').select('curso_id, status').neq('status', 'cancelada'))
+  },
+  async cursosFamiliaGestao() { return ok(await supabase.from('curso_familia').select('*').order('criado_em')) },
+  async inscricoesFamilia(cursoId) {
+    return ok(await supabase.from('inscricao_familia').select('*').eq('curso_id', cursoId).order('criada_em'))
+  },
+  async tratarInscricao(id, status, perfilId) {
+    ok(await supabase.from('inscricao_familia').update({ status, tratada_por: perfilId, tratada_em: new Date().toISOString() }).eq('id', id))
+  },
+  async mudarStatusCurso(id, status) { ok(await supabase.from('curso_familia').update({ status }).eq('id', id)) },
 }
