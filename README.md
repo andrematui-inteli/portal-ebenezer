@@ -30,22 +30,23 @@ Tudo fica em **Escola** (`/escola`), na barra de navegação de cada perfil. A r
 | Links de estudo | vê | vê | vê | adiciona | adiciona |
 | Biblioteca | reserva (até 2) | reserva | reserva | entrega e recebe | entrega e recebe |
 | Necessidades | — | vê e promete doar | vê e promete doar | propõe (vai para aprovação) | publica e confirma doação recebida |
-| Ranking | — | vê | vê (e aparece nele) | vê | vê |
-| Desempenho | o próprio e a turma | os filhos e as turmas | só turmas (agregado) | lança notas e comentários das suas turmas | tudo |
+| Quem apoia com constância | — | vê (meses de apoio) | vê (meses de apoio; o próprio valor só para si) | vê (meses de apoio) | vê, com valores |
+| Desempenho | as próprias notas e a turma (sem comentários dos professores) | os filhos (com comentários) e as turmas | só turmas (agregado) | lança notas e comentários das suas turmas | tudo |
 | Sugestões | — | envia | envia | responde | responde |
 | Cadastro | — | — | — | — | cadastra pessoas e crianças, liga responsáveis, libera acesso de aluno, aprova pedidos |
 
 - **Conversas:** a conversa individual aparece só para os participantes e a diretoria. O responsável pede; o professor e a diretoria também marcam direto com a família de um aluno.
-- **Ranking:** mostra os valores doados (decisão da diretoria em 8/10/2026), só para quem está logado. O nome aparece apenas para quem autorizou; os demais aparecem como "Apoiador anônimo".
-- **Doações:** doar pelo portal registra uma **intenção** e, na vaquinha, mostra o PIX copia e cola com o valor. Só conta na barra e no ranking quando a diretoria confirma que o dinheiro chegou. O portal não processa pagamento.
+- **Quem apoia com constância:** reconhece há quantos meses cada pessoa e empresa apoia, nunca quanto doou (princípio 2, RF-06). O valor aparece só para o próprio apoiador e para a gestão. O nome aparece apenas para quem autorizou; os demais aparecem como "Apoiador anônimo".
+- **Doações:** doar pelo portal registra uma **intenção** e, na vaquinha, mostra o PIX copia e cola com o valor. Só conta na barra e no quadro de apoiadores quando a diretoria confirma que o dinheiro chegou. O portal não processa pagamento.
 - **PIX:** a chave é cadastrada e editada pela diretoria em **Escola → Necessidades**.
-- **Suspensão:** só professor (alunos das suas turmas) e diretoria suspendem o acesso de um aluno. O responsável define o PIN de saída e pode pausar a exibição dos dados do filho (LGPD).
+- **Acesso da criança:** o responsável libera e suspende o acesso e define o PIN de saída (RF-04); a gestão pode intervir em caso excepcional. O responsável também pode pausar a exibição dos dados do filho (LGPD).
+- **Comentários dos professores:** ficam entre família e equipe; a própria criança não os vê.
 - **Agenda:** aula, prova e entrega só de segunda a sexta (regra no banco). O fim de semana é para visitas e atividades extracurriculares.
 
 ## Como aplicar o banco no Supabase
 
 1. Crie um projeto no Supabase na região São Paulo (`sa-east-1`).
-2. No SQL Editor, rode os arquivos de `supabase/migrations/` em ordem numérica (são oito).
+2. No SQL Editor, rode os arquivos de `supabase/migrations/` em ordem numérica (são nove).
 
 3. Rode `supabase/seed/dados_sinteticos.sql` para popular o banco. Ele pode ser rodado de novo a qualquer momento: apaga os dados sintéticos anteriores e gera tudo outra vez, com datas relativas ao dia. **Rode de novo antes de cada demonstração**, para os painéis aparecerem atualizados.
 

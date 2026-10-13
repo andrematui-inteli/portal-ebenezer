@@ -1,60 +1,52 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Building2, Medal, User } from 'lucide-react'
+import { Building2, CalendarHeart, User } from 'lucide-react'
 import { api } from '@api'
 import { useCarregar } from '../../lib/useCarregar'
 import { Carregando, Erro, Vazio } from '../../components/comuns'
 import { reais, numero } from '../../lib/formato'
 import { Pagina, Filtros } from './comum'
 
-const MEDALHA = ['#C9A227', '#9AA4AE', '#B0703C']
-
-// Ranking separado: pessoas físicas e empresas (CNPJ). Nome só aparece com autorização.
+// Quadro de apoiadores por constância (princípio 2, RF-06): mostra há quantos meses
+// cada um apoia, nunca quanto doou. O valor aparece só para o próprio apoiador
+// (no cartão "Sua contribuição") e para a gestão. O banco já entrega assim.
 export default function Ranking() {
   const [cat, setCat] = useState('pessoa_fisica')
   const { dados, erro, carregando, recarregar } = useCarregar(() => api.ranking())
   const lista = (dados || []).filter((r) => r.categoria === cat)
-  const total = lista.reduce((s, r) => s + Number(r.total_reais), 0)
+    .sort((a, b) => b.meses_de_apoio - a.meses_de_apoio || a.nome.localeCompare(b.nome))
   const eu = (dados || []).find((r) => r.sou_eu)
+  const veValores = (dados || []).some((r) => !r.sou_eu && r.total_reais != null)   // só a gestão
+  const plural = (n) => `${n} ${n === 1 ? 'mês' : 'meses'}`
   return (
-    <Pagina titulo="Ranking de apoio" largo intro="Quem mais tem contribuído com o Instituto neste ano. Obrigado a cada um!">
-      <Filtros rotulo="Categoria" valor={cat} mudar={setCat} opcoes={[['pessoa_fisica', 'Pessoas'], ['empresa', 'Empresas']]} />
-      {eu && eu.categoria === cat && (
-        <div className="cartao ranking-eu">
-          <span>Sua posição</span><strong>{eu.posicao}º</strong>
-          <span className="fonte">{reais(eu.total_reais)}{eu.itens_doados > 0 && ` e ${numero(eu.itens_doados)} itens`} em {eu.meses_de_apoio} {eu.meses_de_apoio === 1 ? 'mês' : 'meses'}</span>
+    <Pagina titulo="Quem apoia com constância" largo intro="Cada mês de apoio conta. Aqui ninguém compete por valor: mostramos há quanto tempo cada pessoa e empresa caminha com o Instituto.">
+      {eu && (
+        <div className="cartao pilha">
+          <strong>Sua contribuição</strong>
+          <p>Você apoia há <strong>{plural(eu.meses_de_apoio)}</strong>
+            {eu.total_reais != null && <>, somando {reais(eu.total_reais)}{eu.itens_doados > 0 && ` e ${numero(eu.itens_doados)} itens`}</>}.</p>
+          <p className="fonte">Só você vê o seu valor. Para os outros, aparecem apenas os meses de apoio.</p>
         </div>
       )}
+      <Filtros rotulo="Categoria" valor={cat} mudar={setCat} opcoes={[['pessoa_fisica', 'Pessoas'], ['empresa', 'Empresas']]} />
       {carregando && <Carregando />}
       {erro && <Erro mensagem={erro} tentarDeNovo={recarregar} />}
-      {dados && lista.length === 0 && <Vazio titulo="Ainda não há doações nesta categoria." />}
+      {dados && lista.length === 0 && <Vazio titulo="Ainda não há apoiadores nesta categoria." />}
       {lista.length > 0 && (
         <>
-          <div className="podio" aria-label="Três primeiros">
-            {[1, 0, 2].map((i) => lista[i] && (
-              <div key={i} className={`podio__lugar podio__lugar--${i + 1}`}>
-                <Medal size={30} color={MEDALHA[i]} aria-hidden="true" />
-                <strong>{lista[i].nome}</strong>
-                <span>{reais(lista[i].total_reais)}</span>
-                <div className="podio__degrau">{i + 1}º</div>
-              </div>
-            ))}
-          </div>
-          <ol className="ranking cartao">
-            {lista.map((r) => (
-              <li key={r.posicao + r.nome} className={r.sou_eu ? 'ranking__eu' : ''}>
-                <span className="ranking__pos">{r.posicao}º</span>
+          <ul className="lista-simples cartao" style={{ padding: '0 16px' }}>
+            {lista.map((r, i) => (
+              <li key={i + r.nome} style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
                 {cat === 'empresa' ? <Building2 size={20} aria-hidden="true" /> : <User size={20} aria-hidden="true" />}
-                <span className="ranking__nome">{r.nome}{r.sou_eu && <span className="etiqueta" style={{ marginLeft: 8 }}>você</span>}</span>
-                <span className="ranking__valor">
-                  <strong>{reais(r.total_reais)}</strong>
-                  <small>{r.itens_doados > 0 && `+ ${numero(r.itens_doados)} itens · `}{r.meses_de_apoio} {r.meses_de_apoio === 1 ? 'mês' : 'meses'}</small>
+                <span style={{ flex: 1 }}>
+                  <strong>{r.nome}</strong>{r.sou_eu && <span className="etiqueta" style={{ marginLeft: 8 }}>você</span>}
+                  {veValores && r.total_reais != null && <span className="fonte" style={{ display: 'block' }}>{reais(r.total_reais)} (visível só para a gestão)</span>}
                 </span>
-                <span className="ranking__barra" style={{ width: `${(Number(r.total_reais) / Number(lista[0].total_reais || 1)) * 100}%` }} aria-hidden="true" />
+                <span className="suave" style={{ whiteSpace: 'nowrap' }}><CalendarHeart size={16} aria-hidden="true" style={{ verticalAlign: '-3px' }} /> {plural(r.meses_de_apoio)}</span>
               </li>
             ))}
-          </ol>
-          <p className="fonte">Total da categoria: {reais(total)}. Conta só o que já chegou ao Instituto. Quem não autorizou aparece como “Apoiador anônimo”; para mudar, fale com a coordenação. <Link to="/escola/necessidades">Ver o que ainda falta</Link>.</p>
+          </ul>
+          <p className="fonte">Quem não autorizou aparece como “Apoiador anônimo”; para mudar, fale com a coordenação. <Link to="/escola/necessidades">Ver o que ainda falta</Link>.</p>
         </>
       )}
     </Pagina>

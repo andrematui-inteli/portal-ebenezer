@@ -75,9 +75,12 @@ select pg_temp.checa((select array_agg(titulo order by titulo) from evento) = '{
   'Marisa vê o encontro de patrocinadores e o passeio; não vê provas, reuniões nem conversas');
 select pg_temp.checa((select count(*) from nota) + (select count(*) from observacao_aluno) = 0, 'Marisa não vê notas nem comentários');
 select pg_temp.checa((select count(*) from ranking_apoiadores where categoria = 'pessoa_fisica') = 2
-  and exists (select 1 from ranking_apoiadores where nome = 'Marisa S.' and sou_eu and posicao = 1)
+  and exists (select 1 from ranking_apoiadores where nome = 'Marisa S.' and sou_eu and meses_de_apoio = 2)
   and exists (select 1 from ranking_apoiadores where nome = 'Apoiador anônimo'),
-  'ranking: Marisa em 1º com nome autorizado; Jonas aparece anônimo');
+  'quadro de apoiadores: Marisa com nome autorizado e 2 meses; Jonas aparece anônimo');
+select pg_temp.checa((select total_reais from ranking_apoiadores where sou_eu) = 200
+  and (select total_reais from ranking_apoiadores where not sou_eu and categoria = 'pessoa_fisica') is null,
+  'Marisa vê o próprio total, mas não o valor doado pelos outros');
 do $$ begin
   perform public.reservar_livro((select id from livro where titulo = 'A bolsa amarela'));
   raise exception 'deveria ter falhado';
@@ -221,5 +224,29 @@ do $$ begin
 exception when insufficient_privilege then raise notice 'ok  visitante não vê a lista da equipe';
 end $$;
 select pg_temp.checa((select vaquinha from publico_carencias where titulo = 'Vaquinha do telhado'), 'vitrine pública já mostra a vaquinha');
+
+
+-- ── Correções da migração 9 ──
+reset role; select pg_temp.entrar(null);
+insert into observacao_aluno (crianca_id, tipo, texto, autor_id) values
+ ('10000000-0000-0000-0000-000000000001', 'dificuldade', 'Comentário sobre o Kauã', '00000000-0000-0000-0000-00000000000a');
+set role authenticated;
+select pg_temp.entrar('00000000-0000-0000-0000-0000000000b1');
+select pg_temp.checa((select count(*) from observacao_aluno) = 0, 'Kauã não lê os comentários dos professores sobre ele');
+select pg_temp.entrar('00000000-0000-0000-0000-0000000000a1');
+select pg_temp.checa((select count(*) from observacao_aluno) = 1, 'Adriana lê o comentário sobre o filho');
+update acesso_estudante set suspenso_em = now() where crianca_id = '10000000-0000-0000-0000-000000000001';
+select pg_temp.checa((select suspenso_em is not null from acesso_estudante where crianca_id = '10000000-0000-0000-0000-000000000001'),
+  'Adriana suspende o acesso do filho');
+update acesso_estudante set suspenso_em = null where crianca_id = '10000000-0000-0000-0000-000000000001';
+select pg_temp.entrar('00000000-0000-0000-0000-00000000000e');
+do $$ begin
+  update acesso_estudante set suspenso_em = now() where crianca_id = '10000000-0000-0000-0000-000000000001';
+  if found then raise exception 'deveria ter falhado'; end if;
+  raise notice 'ok  a professora não suspende o acesso de aluno; quem decide é a família';
+end $$;
+select pg_temp.entrar('00000000-0000-0000-0000-00000000000a');
+select pg_temp.checa((select count(*) from ranking_apoiadores where total_reais is not null) = (select count(*) from ranking_apoiadores),
+  'a gestão vê os valores de todos os apoiadores');
 
 \echo '\nTodos os testes da vida escolar passaram.'

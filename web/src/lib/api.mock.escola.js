@@ -246,13 +246,17 @@ export function apiEscola(personaAtual, espera) {
     async ranking() {
       const p = eu()
       if (!p || p.papel === 'estudante') return espera([])
-      const linhas = APOIADORES.map(([id, categoria, nome, total_reais, itens_doados, meses_de_apoio]) => ({ sou_eu: id === p.id, categoria, nome, total_reais, itens_doados, meses_de_apoio }))
-      for (const cat of ['pessoa_fisica', 'empresa']) linhas.filter((l) => l.categoria === cat).sort((a, b) => b.total_reais - a.total_reais).forEach((l, i) => { l.posicao = i + 1 })
+      // Igual à visão do banco (migração 9): valor só para o próprio apoiador e para a gestão.
+      const veValor = (id) => id === p.id || p.papel === 'gestao'
+      const linhas = APOIADORES.map(([id, categoria, nome, total_reais, itens_doados, meses_de_apoio]) => ({
+        sou_eu: id === p.id, categoria, nome, meses_de_apoio,
+        total_reais: veValor(id) ? total_reais : null, itens_doados: veValor(id) ? itens_doados : null }))
+      for (const cat of ['pessoa_fisica', 'empresa']) linhas.filter((l) => l.categoria === cat).sort((a, b) => b.meses_de_apoio - a.meses_de_apoio).forEach((l, i) => { l.posicao = i + 1 })
       return espera(linhas.sort((a, b) => a.posicao - b.posicao))
     },
 
     async notas(criancaId) { return espera(criancasVisiveis().includes(criancaId) ? NOTAS.filter((n) => n.crianca_id === criancaId) : []) },
-    async observacoes(criancaId) { return espera(criancasVisiveis().includes(criancaId) ? OBSERVACOES.filter((o) => o.crianca_id === criancaId) : []) },
+    async observacoes(criancaId) { return espera(eu()?.papel !== 'estudante' && criancasVisiveis().includes(criancaId) ? OBSERVACOES.filter((o) => o.crianca_id === criancaId) : []) },
     async lancarNota(n) { NOTAS.push({ id: novoId('nt'), avaliacao: 'Avaliação', ...n }) },
     async salvarObservacao(o) { OBSERVACOES.unshift({ id: novoId('o'), criado_em: new Date().toISOString(), autor: { nome: eu().nome }, ...o }) },
     async presencaIndividual(criancaId) {

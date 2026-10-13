@@ -74,8 +74,11 @@ function AcessoCrianca({ v, acesso, aoMudar }) {
   return (
     <div className="cartao pilha">
       <h3>{nome}</h3>
-      {/* Suspender o acesso é decisão da equipe (migração 7); aqui o responsável só acompanha. */}
-      <p>{suspenso ? `Acesso suspenso pela equipe desde ${dataCurta(acesso.suspenso_em)}. Para entender o motivo, fale com a coordenação.` : `Acesso liberado desde ${dataCurta(acesso.liberado_em)}.`}</p>
+      {/* Quem libera e suspende o acesso da criança é o responsável (RF-04). */}
+      <p>{suspenso ? `Acesso suspenso desde ${dataCurta(acesso.suspenso_em)}.` : `Acesso liberado desde ${dataCurta(acesso.liberado_em)}.`}</p>
+      <button className={`botao ${suspenso ? '' : 'botao--perigo'}`} onClick={async () => { await api.suspenderAcesso(v.crianca_id, !suspenso); aoMudar() }}>
+        {suspenso ? 'Liberar de novo' : 'Suspender acesso'}
+      </button>
       {!suspenso && (
         <form className="pilha" onSubmit={salvarPin}>
           <div className="campo">

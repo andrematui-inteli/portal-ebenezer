@@ -64,7 +64,7 @@ function PorAluno({ perfil }) {
 function Aluno({ criancaId, turmaId, perfil }) {
   const [form, setForm] = useState(null)
   const { dados, erro, carregando, recarregar } = useCarregar(async () => {
-    const [notas, obs, presenca, acesso] = await Promise.all([api.notas(criancaId), api.observacoes(criancaId),
+    const [notas, obs, presenca, acesso] = await Promise.all([api.notas(criancaId), perfil?.papel === 'estudante' ? [] : api.observacoes(criancaId),
       api.presencaIndividual(criancaId), ehEquipe(perfil) ? api.acessoEstudante(criancaId) : null])
     return { notas, obs, presenca, acesso }
   }, [criancaId])
@@ -102,12 +102,12 @@ function Aluno({ criancaId, turmaId, perfil }) {
         : <Vazio titulo="Ainda não há notas lançadas." />}
       {dados.presenca.length > 0 && <div className="cartao"><Barras titulo="Presença por mês" dados={presencaMes} series={PRESENCA} max={100} sufixo="%" /></div>}
 
-      {editar && dados.acesso && (
-        // Só professor e diretoria suspendem o acesso do aluno ao portal (migração 7).
+      {perfil?.papel === 'gestao' && dados.acesso && (
+        // Quem decide o acesso da criança é o responsável (RF-04); a gestão pode intervir em caso excepcional.
         <div className="cartao" style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
           <p style={{ flex: 1, minWidth: 200 }}>
             <strong>Acesso do aluno ao portal:</strong> {dados.acesso.suspenso_em ? 'suspenso.' : 'liberado.'}
-            <br /><span className="fonte">A família é avisada na conta dela de que o acesso foi suspenso pela equipe.</span>
+            <br /><span className="fonte">Normalmente é o responsável quem decide, em Minha conta. Use só em caso excepcional e avise a família.</span>
           </p>
           <button className={`botao ${dados.acesso.suspenso_em ? '' : 'botao--perigo'}`}
             onClick={async () => {
@@ -120,7 +120,8 @@ function Aluno({ criancaId, turmaId, perfil }) {
         </div>
       )}
 
-      <section className="pilha" aria-labelledby="obs">
+      {/* A criança não lê os comentários dos professores sobre ela (migração 9). */}
+      {perfil?.papel !== 'estudante' && <section className="pilha" aria-labelledby="obs">
         <div className="cabeca">
           <h2 id="obs" style={{ flex: 1 }}>Comentários dos professores</h2>
           {editar && <>
@@ -142,7 +143,7 @@ function Aluno({ criancaId, turmaId, perfil }) {
             </div>
           )
         })}
-      </section>
+      </section>}
       {form && <FormAluno tipo={form} criancaId={criancaId} turmaId={turmaId} perfil={perfil} fechar={() => setForm(null)} salvo={() => { setForm(null); recarregar() }} />}
     </>
   )
